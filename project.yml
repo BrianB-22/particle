@@ -46,8 +46,8 @@ targets:
           - AppDelegate.swift
           - main.swift
       - path: Sources/iOS
-    resources:
       - path: Sources/Assets.xcassets
+    resources: []
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: me.bernacki.particle-ios

@@ -115,9 +115,8 @@ final class GameScene: SKScene {
         let titleBundle = Bundle.main
         #endif
         let titleImg: SKSpriteNode
-        if let url = titleBundle.url(forResource: "title", withExtension: "png"),
-           let nsImg = NSImage(contentsOf: url) {
-            let tex = SKTexture(image: nsImg)
+        if let url = titleBundle.url(forResource: "title", withExtension: "png") {
+            let tex = SKTexture(imageNamed: url.path)
             titleImg = SKSpriteNode(texture: tex)
             let imgW = min(tex.size().width, size.width * 0.72)
             let s = imgW / tex.size().width
@@ -1143,6 +1142,22 @@ final class GameScene: SKScene {
         phase = .enteringInitials
         initialsInput = ""
 
+        #if os(iOS)
+        // Use a system alert for initials entry on iPad/iPhone
+        let alert = UIAlertController(title: "ENTER INITIALS", message: nil, preferredStyle: .alert)
+        alert.addTextField { tf in
+            tf.placeholder = "AAA"
+            tf.autocapitalizationType = .allCharacters
+            tf.returnKeyType = .done
+        }
+        alert.addAction(UIAlertAction(title: "OK", style: .default) { [weak self, weak alert] _ in
+            let raw = alert?.textFields?.first?.text ?? ""
+            self?.initialsInput = String(raw.uppercased().prefix(3))
+            self?.confirmInitials()
+        })
+        let vc = view?.window?.rootViewController
+        vc?.present(alert, animated: true)
+        #else
         let cx = size.width / 2, cy = size.height / 2
 
         let panel = SKNode()
@@ -1174,11 +1189,11 @@ final class GameScene: SKScene {
         panel.addChild(slots)
         initialsLabel = slots
 
-        // Cursor blink on the slots label
         slots.run(.repeatForever(.sequence([
             .fadeAlpha(to: 0.4, duration: 0.5),
             .fadeAlpha(to: 1.0, duration: 0.5)
         ])))
+        #endif
     }
 
     private func confirmInitials() {

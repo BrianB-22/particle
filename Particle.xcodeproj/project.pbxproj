@@ -21,6 +21,7 @@
 		35E00C1AD931F9E98D791BA7 /* BoidNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D024CFEA46E5A860CF622504 /* BoidNode.swift */; };
 		363FD8096DA88D6D65E777E2 /* background_gameplay.wav in Resources */ = {isa = PBXBuildFile; fileRef = 589088FFBC8419E10CDCB9B2 /* background_gameplay.wav */; };
 		3791B1B9173F4CA76154DB4D /* BoidNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D024CFEA46E5A860CF622504 /* BoidNode.swift */; };
+		3E01211FDB82D2698CEA5898 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3AC645F7C28DED7CC843023A /* Assets.xcassets */; };
 		3F5BA5C62742C69805C63525 /* boid_safe4.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 62947E319451C1BB41154DE1 /* boid_safe4.mp3 */; };
 		40916F6222FB2C314537FF87 /* background_intro.wav in Resources */ = {isa = PBXBuildFile; fileRef = 44D4CB49DD0541B0AE01C0C5 /* background_intro.wav */; };
 		433C80203A691C9B04208945 /* ScoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65AAD04519AF531D5DA8E94F /* ScoreManager.swift */; };
@@ -75,10 +76,10 @@
 		6F33AB7AD1A06A49E82E57AE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7B6D32C0514A65313B8FE78A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7E3D018769BCF0F853541425 /* PredatorNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredatorNode.swift; sourceTree = "<group>"; };
-		A6C95B097ECA4609EBDC2674 /* Particle-iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "Particle-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A6C95B097ECA4609EBDC2674 /* Particle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Particle.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BC6F7CF26CE3496D5ACCDEE3 /* boid_safe2.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = boid_safe2.wav; sourceTree = "<group>"; };
 		BE397A4C03ACD5DD4DD51DE1 /* pred_lose.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = pred_lose.wav; sourceTree = "<group>"; };
-		C9FFD88154641EAE988B7ADA /* Particle-macOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Particle-macOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C9FFD88154641EAE988B7ADA /* Particle-macOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = "Particle-macOS.app"; path = Particle.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D024CFEA46E5A860CF622504 /* BoidNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoidNode.swift; sourceTree = "<group>"; };
 		E57DFA5423792AC06A5920D5 /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
 		EDD1384235E6750BEC9B7A6D /* Particle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = Particle.icns; sourceTree = "<group>"; };
@@ -99,7 +100,7 @@
 		158A8AF0E00A8DB325491BB7 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A6C95B097ECA4609EBDC2674 /* Particle-iOS.app */,
+				A6C95B097ECA4609EBDC2674 /* Particle.app */,
 				C9FFD88154641EAE988B7ADA /* Particle-macOS.app */,
 			);
 			name = Products;
@@ -201,7 +202,7 @@
 			packageProductDependencies = (
 			);
 			productName = "Particle-iOS";
-			productReference = A6C95B097ECA4609EBDC2674 /* Particle-iOS.app */;
+			productReference = A6C95B097ECA4609EBDC2674 /* Particle.app */;
 			productType = "com.apple.product-type.application";
 		};
 		CB1E89C37D1B4F287D6EF692 /* Particle-macOS */ = {
@@ -264,6 +265,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3E01211FDB82D2698CEA5898 /* Assets.xcassets in Resources */,
 				363FD8096DA88D6D65E777E2 /* background_gameplay.wav in Resources */,
 				40916F6222FB2C314537FF87 /* background_intro.wav in Resources */,
 				15F505112852AF7EF6D4B765 /* boid_dead.wav in Resources */,
@@ -438,6 +440,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 47T99HK7GU;
 				INFOPLIST_FILE = Sources/iOS/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -521,6 +524,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 47T99HK7GU;
 				INFOPLIST_FILE = Sources/iOS/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
