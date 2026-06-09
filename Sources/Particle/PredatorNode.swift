@@ -3,6 +3,7 @@ import SpriteKit
 final class PredatorNode: SKNode {
     var velocity: CGVector = CGVector(dx: 0, dy: 0)
     private(set) var isActive: Bool = false
+    var ghostOnScreenTime: CGFloat = 0
 
     private let body: SKShapeNode
 

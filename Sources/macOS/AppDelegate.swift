@@ -5,7 +5,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var window: NSWindow!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let size = CGSize(width: 960, height: 680)
+        let size = CGSize(width: 1180, height: 820)
         window = NSWindow(
             contentRect: NSRect(origin: .zero, size: size),
             styleMask: [.titled, .closable, .miniaturizable],

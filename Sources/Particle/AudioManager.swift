@@ -64,6 +64,11 @@ final class AudioManager {
     }
 
     private func sound(_ name: String, ext: String) -> URL? {
-        Bundle.module.url(forResource: name, withExtension: ext)
+        // Bundle.module only exists in SPM builds; Xcode app targets use Bundle.main
+        #if SWIFT_PACKAGE
+        return Bundle.module.url(forResource: name, withExtension: ext)
+        #else
+        return Bundle.main.url(forResource: name, withExtension: ext)
+        #endif
     }
 }

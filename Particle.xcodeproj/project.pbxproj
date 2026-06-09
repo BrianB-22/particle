@@ -344,7 +344,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "me.bernacki.particle-ios";
 				PRODUCT_NAME = Particle;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 2;
 			};
 			name = Debug;
 		};
@@ -427,7 +427,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "me.bernacki.particle-ios";
 				PRODUCT_NAME = Particle;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 2;
 			};
 			name = Release;
 		};

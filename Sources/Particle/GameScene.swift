@@ -200,11 +200,10 @@ final class GameScene: SKScene {
         ]
 
         func addRow(_ i: Int, _ entry: ScoreEntry, atY y: CGFloat) {
-            let rank    = i + 1
             let init3   = entry.initials.padding(toLength: 3, withPad: " ", startingAt: 0)
             let scoreS  = String(entry.score).leftPad(toLength: 6)
             let dateS   = formatDate(entry.date)
-            let text    = "\(String(format: "%2d", rank)).  \(init3)   \(scoreS)   W\(entry.wave)   \(dateS)"
+            let text    = "\(init3)   \(scoreS)   Wave \(entry.wave)   \(dateS)"
             let lbl = SKLabelNode(text: text)
             lbl.fontName  = "Courier-Bold"
             lbl.fontSize  = 14
@@ -442,12 +441,8 @@ final class GameScene: SKScene {
             p.alpha = 0
             predators.append(p)
             addChild(p)
-            // Fade in over 2s, then ghost for another 2s, then activate
-            p.run(.sequence([
-                .fadeIn(withDuration: 2.0),
-                .wait(forDuration: 2.0),
-                .run { p.activate() }
-            ]))
+            // Fade in over 2s; activation is gated on being visible on-screen (see updatePredator)
+            p.run(.fadeIn(withDuration: 2.0))
         }
     }
 
@@ -776,6 +771,14 @@ final class GameScene: SKScene {
             }
         }
 
+        // Edge avoidance — push boids away from screen edges so they stay visible
+        let edgeM: CGFloat = 5
+        let edgeStr: CGFloat = 14
+        if boid.position.x < edgeM               { force.dx += (edgeM - boid.position.x) * edgeStr }
+        if boid.position.x > size.width  - edgeM { force.dx -= (boid.position.x - (size.width  - edgeM)) * edgeStr }
+        if boid.position.y < edgeM               { force.dy += (edgeM - boid.position.y) * edgeStr }
+        if boid.position.y > size.height - edgeM { force.dy -= (boid.position.y - (size.height - edgeM)) * edgeStr }
+
         let prev = boid.state
         boid.state = threatened ? .threatened : .wandering
         // Minimum speed scales with wave — forces boids to actually use the higher caps
@@ -790,9 +793,22 @@ final class GameScene: SKScene {
     private func updatePredator(_ pred: PredatorNode, dt: CGFloat) {
         // Ghost phase — drift slowly, no hunting
         if !pred.isActive {
-            pred.velocity = (pred.velocity * 0.98).limited(to: 30)
+            let onScreen = pred.position.x >= 0 && pred.position.x <= size.width &&
+                           pred.position.y >= 0 && pred.position.y <= size.height
+            if onScreen {
+                pred.velocity = (pred.velocity * 0.98).limited(to: 30)
+                // Only count down once fully faded in
+                if pred.alpha >= 0.99 {
+                    pred.ghostOnScreenTime += dt
+                    if pred.ghostOnScreenTime >= 2.0 { pred.activate() }
+                }
+            } else {
+                // Steer toward screen center so the predator enters before activating
+                let toCenter = CGVector(dx: size.width / 2 - pred.position.x,
+                                        dy: size.height / 2 - pred.position.y).normalized() * 80
+                pred.velocity = (pred.velocity + toCenter * dt).limited(to: 60)
+            }
             pred.position = pred.position + pred.velocity * dt
-            wrap(pred)
             return
         }
 
@@ -1175,14 +1191,13 @@ final class GameScene: SKScene {
         y -= 50
 
         let entries = ScoreManager.shared.scores
-        for (i, entry) in entries.enumerated() {
-            let rank = i + 1
+        for (_, entry) in entries.enumerated() {
             let isNew = entry.initials == (initialsInput.isEmpty ? "AAA" : initialsInput) &&
                         entry.score == score && entry.wave == wave
             let initPadded  = entry.initials.padding(toLength: 3, withPad: " ", startingAt: 0)
             let scorePadded = String(entry.score).leftPad(toLength: 6)
             let dateS       = formatDate(entry.date)
-            let line = "\(String(format: "%2d", rank)).  \(initPadded)   \(scorePadded)   W\(entry.wave)   \(dateS)"
+            let line = "\(initPadded)   \(scorePadded)   Wave \(entry.wave)   \(dateS)"
             let lbl = SKLabelNode(text: line)
             lbl.fontName = "Courier-Bold"
             lbl.fontSize = 16
@@ -1242,11 +1257,10 @@ final class GameScene: SKScene {
     // MARK: - Helpers
 
     private func wrap(_ node: SKNode) {
-        let m: CGFloat = 30
-        if node.position.x < -m             { node.position.x = size.width + m }
-        if node.position.x > size.width + m  { node.position.x = -m }
-        if node.position.y < -m             { node.position.y = size.height + m }
-        if node.position.y > size.height + m { node.position.y = -m }
+        if node.position.x < 0            { node.position.x = size.width }
+        if node.position.x > size.width   { node.position.x = 0 }
+        if node.position.y < 0            { node.position.y = size.height }
+        if node.position.y > size.height  { node.position.y = 0 }
     }
 
     private func randomEdgePoint() -> CGPoint {
