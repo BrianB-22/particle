@@ -93,8 +93,9 @@ final class GameScene: SKScene {
         AudioManager.shared.stopBackground()
         AudioManager.shared.startIntro()
 
-        // Ambient drifting boids — no predators, no HUD
+        // Ambient boids + roaming predators for the attract screen
         spawnAmbientBoids()
+        spawnPredators(3)
 
         let panel = SKNode()
         panel.name = "titlePanel"
@@ -107,27 +108,36 @@ final class GameScene: SKScene {
         bg.strokeColor = .clear
         panel.addChild(bg)
 
-        // Title
-        let title = SKLabelNode(text: "PARTICLE")
-        title.fontName  = "Courier-Bold"
-        title.fontSize  = 72
-        title.fontColor = PlatformColor(red: 1.00, green: 0.18, blue: 0.47, alpha: 1)
-        title.position  = CGPoint(x: size.width/2, y: size.height/2 + 60)
-        title.horizontalAlignmentMode = .center
-        panel.addChild(title)
-        title.run(.repeatForever(.sequence([
-            .fadeAlpha(to: 0.7, duration: 1.2),
-            .fadeAlpha(to: 1.0, duration: 1.2)
+        // Title image — load via bundle so SPM and Xcode both work
+        #if SWIFT_PACKAGE
+        let titleBundle = Bundle.module
+        #else
+        let titleBundle = Bundle.main
+        #endif
+        let titleImg: SKSpriteNode
+        if let url = titleBundle.url(forResource: "title", withExtension: "png"),
+           let nsImg = NSImage(contentsOf: url) {
+            let tex = SKTexture(image: nsImg)
+            titleImg = SKSpriteNode(texture: tex)
+            let imgW = min(tex.size().width, size.width * 0.72)
+            let s = imgW / tex.size().width
+            titleImg.size = CGSize(width: imgW, height: tex.size().height * s)
+        } else {
+            // Fallback text if image missing
+            let lbl = SKLabelNode(text: "PARTICLE")
+            lbl.fontName = "Courier-Bold"; lbl.fontSize = 72
+            lbl.fontColor = PlatformColor(red: 1.00, green: 0.18, blue: 0.47, alpha: 1)
+            lbl.horizontalAlignmentMode = .center
+            titleImg = SKSpriteNode()
+            panel.addChild(lbl)
+            lbl.position = CGPoint(x: size.width / 2, y: size.height / 2 + 50)
+        }
+        titleImg.position = CGPoint(x: size.width / 2, y: size.height / 2 + 50)
+        panel.addChild(titleImg)
+        titleImg.run(.repeatForever(.sequence([
+            .fadeAlpha(to: 0.80, duration: 1.2),
+            .fadeAlpha(to: 1.00, duration: 1.2)
         ])))
-
-        // Subtitle / tagline
-        let sub = SKLabelNode(text: "herd the swarm · escape the predators")
-        sub.fontName  = "Courier"
-        sub.fontSize  = 16
-        sub.fontColor = PlatformColor(red: 0.00, green: 0.96, blue: 1.00, alpha: 0.70)
-        sub.position  = CGPoint(x: size.width/2, y: size.height/2 + 14)
-        sub.horizontalAlignmentMode = .center
-        panel.addChild(sub)
 
         // Controls hint
         let ctrl = SKLabelNode(text: "hover to attract   right-click to repel")
@@ -246,9 +256,9 @@ final class GameScene: SKScene {
         }
     }
 
-    private func spawnAmbientBoids() {
+    private func spawnAmbientBoids(count: Int = 35) {
         let margin: CGFloat = 60
-        for _ in 0..<35 {
+        for _ in 0..<count {
             let b = BoidNode()
             b.position = CGPoint(
                 x: CGFloat.random(in: margin...(size.width  - margin)),
@@ -266,10 +276,12 @@ final class GameScene: SKScene {
     }
 
     private func beginGame() {
-        // Remove title panel and ambient boids, then set up properly
+        // Remove title panel, ambient boids, and title predators
         childNode(withName: "titlePanel")?.removeFromParent()
         boids.forEach { $0.removeFromParent() }
         boids.removeAll()
+        predators.forEach { $0.removeFromParent() }
+        predators.removeAll()
 
         placeSafeZones()
         spawnBoids()
@@ -607,19 +619,22 @@ final class GameScene: SKScene {
     // MARK: - Update
 
     override func update(_ currentTime: TimeInterval) {
-        // Title screen: just drift the ambient boids for atmosphere
+        // Title attract screen — full boid/predator simulation, no HUD or scoring
         if phase == .title {
             let dt: CGFloat = lastTime.map { CGFloat(min(currentTime - $0, 1/30.0)) } ?? (1/60.0)
             lastTime = currentTime
+
+            predators.forEach { updatePredator($0, dt: dt) }
             boids.forEach { b in
                 guard b.state != .dying else { return }
-                b.velocity = b.velocity * 0.97
-                let wa = CGFloat.random(in: -.pi ... .pi)
-                b.velocity = (b.velocity + CGVector(dx: cos(wa), dy: sin(wa)) * 0.25)
-                    .clamped(min: 4, max: 40)
-                b.position = b.position + b.velocity * dt
+                updateBoid(b, dt: dt)
                 wrap(b)
             }
+
+            // Replenish when the predators have thinned the herd
+            let active = boids.filter { $0.state != .dying }.count
+            if active <= 10 { spawnAmbientBoids(count: 15) }
+
             return
         }
         guard phase == .playing else { return }
@@ -997,13 +1012,22 @@ final class GameScene: SKScene {
 
     private func devour(_ boid: BoidNode) {
         boid.state = .dying
-        lives = max(lives - 1, 0)
-        refreshHUD(); refreshBoidCount()
         AudioManager.shared.play("boid_dead")
 
         let pos   = boid.position
         let color = boid.neonColor
         spawnDeathExplosion(at: pos, color: color)
+
+        // Title screen — no lives, no HUD, no game-over
+        if phase == .title {
+            boid.playDeathAnimation { [weak self] in
+                self?.boids.removeAll { $0 === boid }
+            }
+            return
+        }
+
+        lives = max(lives - 1, 0)
+        refreshHUD(); refreshBoidCount()
 
         boid.playDeathAnimation { [weak self] in
             self?.boids.removeAll { $0 === boid }

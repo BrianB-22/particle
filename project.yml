@@ -21,7 +21,10 @@ targets:
       - path: Sources/Particle
         excludes:
           - sounds
+          - AppDelegate.swift
+          - main.swift
       - path: Sources/macOS
+      - path: Sources/Assets.xcassets
     resources:
       - path: Sources/Particle/sounds
     settings:
@@ -30,6 +33,7 @@ targets:
         PRODUCT_NAME: Particle
         INFOPLIST_FILE: Sources/macOS/Info.plist
         CODE_SIGN_STYLE: Automatic
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     scheme:
       environmentVariables:
         OS_ACTIVITY_MODE: disable
@@ -47,6 +51,7 @@ targets:
       - path: Sources/iOS
     resources:
       - path: Sources/Particle/sounds
+      - path: Sources/Assets.xcassets
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: me.bernacki.particle-ios
@@ -54,3 +59,4 @@ targets:
         INFOPLIST_FILE: Sources/iOS/Info.plist
         CODE_SIGN_STYLE: Automatic
         TARGETED_DEVICE_FAMILY: "2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon

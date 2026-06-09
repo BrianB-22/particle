@@ -8,7 +8,7 @@ let package = Package(
         .executableTarget(
             name: "Particle",
             path: "Sources/Particle",
-            resources: [.process("sounds")]
+            resources: [.process("sounds"), .process("images")]
         )
     ]
 )
