@@ -46,7 +46,7 @@ final class AudioManager {
         let effects: [(String, String)] = [
             ("boid_dead",       "wav"),
             ("boid_safe",       "wav"),
-            ("wormhole_appear", "wav"),
+            ("blackhole_appear", "wav"),
             ("pred_lose",       "wav"),
             ("gameover",        "wav"),
         ]

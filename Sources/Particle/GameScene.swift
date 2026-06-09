@@ -27,6 +27,9 @@ private enum Config {
     static let wFlee:   CGFloat = 0.7
     static let wPlayer: CGFloat = 3.5
     static let wWander: CGFloat = 0.18
+
+    // Feature flags
+    static let boidTrails: Bool = true
 }
 
 // MARK: - GameScene
@@ -37,7 +40,7 @@ final class GameScene: SKScene {
     private var boids:     [BoidNode]      = []
     private var predators: [PredatorNode]  = []
     private var safeZones: [SafeZoneNode]  = []
-    private var wormholes: [WormholeNode]  = []
+    private var blackHoles: [BlackHoleNode]  = []
 
     // MARK: Input
     private struct InputState {
@@ -58,8 +61,8 @@ final class GameScene: SKScene {
     private var wave              = 1
     private var waveCompleteGuard      = false
     private var timerFired             = false
-    private var wormholeSpawnedThisWave  = false
-    private var wormholeRolledThisWave   = false  // 50% chance roll result for this wave
+    private var blackHoleSpawnedThisWave  = false
+    private var blackHoleRolledThisWave   = false  // 50% chance roll result for this wave
 
     // MARK: Timer
     private var waveTimeRemaining: Double = 0
@@ -459,17 +462,17 @@ final class GameScene: SKScene {
     }
 
     // Triggered mid-wave once half the boids are safe — spawn far from the loose cluster
-    private func checkWormholeSpawn() {
-        guard wave > 4, wormholeRolledThisWave, !wormholeSpawnedThisWave, phase == .playing else { return }
+    private func checkBlackHoleSpawn() {
+        guard wave > 4, blackHoleRolledThisWave, !blackHoleSpawnedThisWave, phase == .playing else { return }
         let safeCount = boids.filter { $0.state == .safe }.count
         guard safeCount >= Config.boidCount / 2 else { return }
 
-        wormholeSpawnedThisWave = true
-        AudioManager.shared.play("wormhole_appear")
+        blackHoleSpawnedThisWave = true
+        AudioManager.shared.play("blackhole_appear")
         let spawnPt = spawnPointFarFromBoids()
 
         // Warning pulse at spawn point — 1.5s before the wormhole materialises
-        let warning = SKShapeNode(circleOfRadius: WormholeNode.killRadius * 2.5)
+        let warning = SKShapeNode(circleOfRadius: BlackHoleNode.killRadius * 2.5)
         warning.fillColor = .clear
         warning.strokeColor = PlatformColor(red: 0.8, green: 0, blue: 1, alpha: 0.7)
         warning.lineWidth = 2
@@ -486,14 +489,14 @@ final class GameScene: SKScene {
         ]))
 
         // Wormhole fades in after the warning, gravity builds with alpha
-        let w = WormholeNode()
+        let w = BlackHoleNode()
         w.position = spawnPt
         w.alpha = 0
         w.run(.sequence([
             .wait(forDuration: 1.5),
             .fadeIn(withDuration: 2.5)
         ]))
-        wormholes.append(w)
+        blackHoles.append(w)
         addChild(w)
     }
 
@@ -650,7 +653,7 @@ final class GameScene: SKScene {
         tickTimer(dt: dt)
 
         predators.forEach { updatePredator($0, dt: dt) }
-        wormholes.forEach  { updateWormhole($0, dt: dt) }
+        blackHoles.forEach  { updateBlackHole($0, dt: dt) }
         boids.forEach { b in
             guard b.state != .dying else { return }
             updateBoid(b, dt: dt)
@@ -660,8 +663,8 @@ final class GameScene: SKScene {
         checkSafeZones()
         enforceFullZoneBoundaries()
         checkCatches()
-        checkWormholeSpawn()
-        checkWormholes()
+        checkBlackHoleSpawn()
+        checkBlackHoles()
         checkWaveComplete()
     }
 
@@ -735,12 +738,14 @@ final class GameScene: SKScene {
         }
         if sepN > 0 { force += sep.normalized() * Config.wSep }
 
+        let p = boid.personality
+
         // Alignment
         let ap = neighbors.filter { boid.position.distance(to: $0.position) < Config.rAlignment }
         if !ap.isEmpty {
             let n = CGFloat(ap.count)
             let avg = ap.reduce(CGVector.zero) { $0 + $1.velocity }
-            force += CGVector(dx: avg.dx/n, dy: avg.dy/n).normalized() * Config.wAlign
+            force += CGVector(dx: avg.dx/n, dy: avg.dy/n).normalized() * Config.wAlign * p.alignmentScale
         }
 
         // Cohesion
@@ -749,7 +754,7 @@ final class GameScene: SKScene {
             let cx = neighbors.reduce(CGFloat(0)) { $0 + $1.position.x } / n
             let cy = neighbors.reduce(CGFloat(0)) { $0 + $1.position.y } / n
             let tc = CGPoint(x: cx, y: cy) - boid.position
-            if tc.magnitude > 0 { force += tc.normalized() * Config.wCohese }
+            if tc.magnitude > 0 { force += tc.normalized() * Config.wCohese * p.cohesionScale }
         }
 
         // Flee predators — inactive (ghost) predators don't scare boids
@@ -758,18 +763,18 @@ final class GameScene: SKScene {
             let d = boid.position.distance(to: pred.position)
             if d < Config.rCatch {
                 threatened = true
-            } else if d < Config.rThreat {
-                force += (boid.position - pred.position).normalized() * Config.wFlee * (1 - d/Config.rThreat)
+            } else if d < Config.rThreat * p.threatScale {
+                force += (boid.position - pred.position).normalized() * Config.wFlee * p.fleeScale * (1 - d / (Config.rThreat * p.threatScale))
                 threatened = true
             }
         }
 
         // Wormhole gravity — scales with alpha so danger grows with the fade-in
-        for wh in wormholes {
+        for wh in blackHoles {
             let d = boid.position.distance(to: wh.position)
-            if d < WormholeNode.gravityRadius && d > 0 {
-                let s = (1 - d / WormholeNode.gravityRadius)
-                force += (wh.position - boid.position).normalized() * WormholeNode.gravityStrength * s * s * wh.alpha
+            if d < BlackHoleNode.gravityRadius && d > 0 {
+                let s = (1 - d / BlackHoleNode.gravityRadius)
+                force += (wh.position - boid.position).normalized() * BlackHoleNode.gravityStrength * s * s * wh.alpha
                 if wh.alpha > 0.3 { threatened = true }
             }
         }
@@ -794,11 +799,30 @@ final class GameScene: SKScene {
         if boid.position.y < edgeM               { force.dy += (edgeM - boid.position.y) * edgeStr }
         if boid.position.y > size.height - edgeM { force.dy -= (boid.position.y - (size.height - edgeM)) * edgeStr }
 
+        if Config.boidTrails && boid.state != .safe {
+            boid.trailTimer += dt
+            if boid.trailTimer >= 0.05 {
+                boid.trailTimer = 0
+                let dot = SKShapeNode(circleOfRadius: 2.5)
+                dot.fillColor   = boid.neonColor.withAlphaComponent(0.55)
+                dot.strokeColor = .clear
+                dot.glowWidth   = 4
+                dot.position    = boid.position
+                dot.zPosition   = boid.zPosition - 1
+                addChild(dot)
+                dot.run(.sequence([
+                    .fadeOut(withDuration: 0.45),
+                    .removeFromParent()
+                ]))
+            }
+        }
+
         let prev = boid.state
         boid.state = threatened ? .threatened : .wandering
         // Minimum speed scales with wave — forces boids to actually use the higher caps
-        let waveMin: CGFloat = wave == 1 ? Config.minSpeed : waveBoidMaxSpeed() * 0.42
-        boid.velocity = (boid.velocity + force).clamped(min: waveMin, max: waveBoidMaxSpeed())
+        let waveMax = waveBoidMaxSpeed() * p.speedScale
+        let waveMin: CGFloat = wave == 1 ? Config.minSpeed : waveMax * 0.42
+        boid.velocity = (boid.velocity + force).clamped(min: waveMin, max: waveMax)
         if Config.showBoidTrails { spawnTrail(at: boid.position, color: boid.neonColor) }
         boid.position = boid.position + boid.velocity * dt
         if boid.state != prev { boid.applyStateAppearance() }
@@ -874,7 +898,7 @@ final class GameScene: SKScene {
 
     // MARK: - Wormhole update
 
-    private func updateWormhole(_ wh: WormholeNode, dt: CGFloat) {
+    private func updateBlackHole(_ wh: BlackHoleNode, dt: CGFloat) {
         wh.position = wh.position + wh.velocity * dt
         wrap(wh)
     }
@@ -939,10 +963,10 @@ final class GameScene: SKScene {
         }
     }
 
-    private func checkWormholes() {
-        for wh in wormholes where wh.alpha > 0.7 {   // not lethal while still materialising
+    private func checkBlackHoles() {
+        for wh in blackHoles where wh.alpha > 0.7 {   // not lethal while still materialising
             for boid in boids where boid.state == .wandering || boid.state == .threatened {
-                if wh.position.distance(to: boid.position) < WormholeNode.killRadius { suckIn(boid) }
+                if wh.position.distance(to: boid.position) < BlackHoleNode.killRadius { suckIn(boid) }
             }
         }
     }
@@ -1015,10 +1039,10 @@ final class GameScene: SKScene {
 
         // Wave 11+ : 50% chance wormhole appears mid-wave
         if wave > 4 {
-            wormholes.forEach { $0.removeFromParent() }
-            wormholes.removeAll()
-            wormholeSpawnedThisWave  = false
-            wormholeRolledThisWave   = Bool.random()   // coin flip each wave
+            blackHoles.forEach { $0.removeFromParent() }
+            blackHoles.removeAll()
+            blackHoleSpawnedThisWave  = false
+            blackHoleRolledThisWave   = Bool.random()   // coin flip each wave
         }
 
         spawnPredators(wavePredatorCount())
@@ -1303,10 +1327,10 @@ final class GameScene: SKScene {
 
     private func restart() {
         removeAllChildren(); removeAllActions()
-        boids.removeAll(); predators.removeAll(); safeZones.removeAll(); wormholes.removeAll()
+        boids.removeAll(); predators.removeAll(); safeZones.removeAll(); blackHoles.removeAll()
         score = 0; lives = 3; wave = 1; lastTime = nil
         waveCompleteGuard = false; timerFired = false
-        wormholeSpawnedThisWave = false; wormholeRolledThisWave = false
+        blackHoleSpawnedThisWave = false; blackHoleRolledThisWave = false
         backgroundColor = PlatformColor(red: 0.04, green: 0.00, blue: 0.07, alpha: 1)
         drawGrid()
         showTitleScreen()   // back to title between runs

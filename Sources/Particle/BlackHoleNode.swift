@@ -1,6 +1,6 @@
 import SpriteKit
 
-final class WormholeNode: SKNode {
+final class BlackHoleNode: SKNode {
     static let gravityRadius:   CGFloat = 160
     static let killRadius:      CGFloat = 24
     static let gravityStrength: CGFloat = 1.8
@@ -18,14 +18,14 @@ final class WormholeNode: SKNode {
 
     private func buildVisuals() {
         // Faint gravity-field disc
-        let field = SKShapeNode(circleOfRadius: WormholeNode.gravityRadius)
+        let field = SKShapeNode(circleOfRadius: BlackHoleNode.gravityRadius)
         field.fillColor = PlatformColor(red: 0.28, green: 0, blue: 0.5, alpha: 0.04)
         field.strokeColor = PlatformColor(red: 0.5, green: 0, blue: 0.9, alpha: 0.12)
         field.lineWidth = 1
         addChild(field)
 
         // Event horizon glow ring
-        let horizon = SKShapeNode(circleOfRadius: WormholeNode.killRadius + 6)
+        let horizon = SKShapeNode(circleOfRadius: BlackHoleNode.killRadius + 6)
         horizon.fillColor = .clear
         horizon.strokeColor = PlatformColor(red: 0.8, green: 0, blue: 1, alpha: 0.9)
         horizon.lineWidth = 2
@@ -37,19 +37,19 @@ final class WormholeNode: SKNode {
         ])))
 
         // Singularity core
-        let core = SKShapeNode(circleOfRadius: WormholeNode.killRadius)
+        let core = SKShapeNode(circleOfRadius: BlackHoleNode.killRadius)
         core.fillColor = PlatformColor(red: 0.04, green: 0, blue: 0.08, alpha: 0.97)
         core.strokeColor = .clear
         core.glowWidth = 4
         addChild(core)
 
         // Inner ring — 10 dots, counter-clockwise
-        addChild(makeDotRing(count: 10, radius: WormholeNode.killRadius + 13,
+        addChild(makeDotRing(count: 10, radius: BlackHoleNode.killRadius + 13,
                              dotR: 2.5, accent: 3, color: PlatformColor(red: 0.8, green: 0.1, blue: 1, alpha: 1),
                              duration: -1.7))
 
         // Outer ring — 7 dots, clockwise
-        addChild(makeDotRing(count: 7, radius: WormholeNode.killRadius + 26,
+        addChild(makeDotRing(count: 7, radius: BlackHoleNode.killRadius + 26,
                              dotR: 1.8, accent: 0, color: PlatformColor(red: 0.5, green: 0, blue: 0.8, alpha: 0.5),
                              duration: 3.1))
     }

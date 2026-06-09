@@ -2,9 +2,29 @@ import SpriteKit
 
 enum BoidState { case spawning, wandering, threatened, safe, dying }
 
+enum BoidPersonality {
+    case normal, skittish, stubborn
+
+    static func random() -> BoidPersonality {
+        switch Int.random(in: 0...4) {
+        case 0:    return .skittish
+        case 1:    return .stubborn
+        default:   return .normal
+        }
+    }
+
+    var speedScale:      CGFloat { switch self { case .skittish: 1.30; case .stubborn: 0.70; case .normal: 1.0 } }
+    var threatScale:     CGFloat { switch self { case .skittish: 1.40; case .stubborn: 0.65; case .normal: 1.0 } }
+    var fleeScale:       CGFloat { switch self { case .skittish: 1.50; case .stubborn: 0.50; case .normal: 1.0 } }
+    var cohesionScale:   CGFloat { switch self { case .skittish: 0.80; case .stubborn: 0.30; case .normal: 1.0 } }
+    var alignmentScale:  CGFloat { switch self { case .skittish: 0.90; case .stubborn: 0.25; case .normal: 1.0 } }
+}
+
 final class BoidNode: SKNode {
     var velocity: CGVector
     var state: BoidState = .spawning
+    var trailTimer: CGFloat = 0
+    let personality: BoidPersonality
 
     let neonColor: PlatformColor
     private let core: SKShapeNode
@@ -17,17 +37,22 @@ final class BoidNode: SKNode {
     ]
 
     override init() {
+        personality = BoidPersonality.random()
         neonColor = BoidNode.palette.randomElement()!
         let speed = CGFloat.random(in: 8...22)
         let angle = CGFloat.random(in: 0...(2 * .pi))
         velocity = CGVector(dx: cos(angle) * speed, dy: sin(angle) * speed)
 
-        halo = SKShapeNode(circleOfRadius: 10)
+        // Skittish = smaller, stubborn = larger
+        let coreRadius: CGFloat = personality == .skittish ? 3 : personality == .stubborn ? 5.5 : 4
+        let haloRadius: CGFloat = personality == .skittish ? 8 : personality == .stubborn ? 13 : 10
+
+        halo = SKShapeNode(circleOfRadius: haloRadius)
         halo.fillColor = PlatformColor.white.withAlphaComponent(0.06)
         halo.strokeColor = .clear
         halo.zPosition = -1
 
-        core = SKShapeNode(circleOfRadius: 4)
+        core = SKShapeNode(circleOfRadius: coreRadius)
         core.lineWidth = 1
         core.glowWidth = 6
 
