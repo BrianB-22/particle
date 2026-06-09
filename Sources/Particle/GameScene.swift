@@ -4,6 +4,7 @@ import SpriteKit
 
 private enum Config {
     static let boidCount = 50
+    static let showBoidTrails = true
 
     // Base speeds — wave scaling adds on top each wave
     static let baseBoidSpeed:      CGFloat = 55
@@ -798,8 +799,26 @@ final class GameScene: SKScene {
         // Minimum speed scales with wave — forces boids to actually use the higher caps
         let waveMin: CGFloat = wave == 1 ? Config.minSpeed : waveBoidMaxSpeed() * 0.42
         boid.velocity = (boid.velocity + force).clamped(min: waveMin, max: waveBoidMaxSpeed())
+        if Config.showBoidTrails { spawnTrail(at: boid.position, color: boid.neonColor) }
         boid.position = boid.position + boid.velocity * dt
         if boid.state != prev { boid.applyStateAppearance() }
+    }
+
+    private func spawnTrail(at pos: CGPoint, color: PlatformColor) {
+        let dot = SKShapeNode(circleOfRadius: 2.2)
+        dot.fillColor = color.withAlphaComponent(0.55)
+        dot.strokeColor = .clear
+        dot.glowWidth = 3
+        dot.position = pos
+        dot.zPosition = 4
+        addChild(dot)
+        dot.run(.sequence([
+            .group([
+                .scale(to: 0.2, duration: 0.35),
+                .fadeOut(withDuration: 0.35)
+            ]),
+            .removeFromParent()
+        ]))
     }
 
     // MARK: - Predator steering
