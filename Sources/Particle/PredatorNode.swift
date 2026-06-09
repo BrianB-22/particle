@@ -9,8 +9,8 @@ final class PredatorNode: SKNode {
     override init() {
         body = SKShapeNode(circleOfRadius: 9)
         // Starts ghostly blue — not yet hunting
-        body.fillColor   = NSColor(red: 0.30, green: 0.55, blue: 1.00, alpha: 0.70)
-        body.strokeColor = NSColor(red: 0.55, green: 0.75, blue: 1.00, alpha: 0.90)
+        body.fillColor   = PlatformColor(red: 0.30, green: 0.55, blue: 1.00, alpha: 0.70)
+        body.strokeColor = PlatformColor(red: 0.55, green: 0.75, blue: 1.00, alpha: 0.90)
         body.lineWidth = 1.5
         body.glowWidth = 12
 
@@ -40,8 +40,8 @@ final class PredatorNode: SKNode {
             .group([
                 .scale(to: 1.0, duration: 0.25),
                 .run { [weak self] in
-                    self?.body.fillColor   = NSColor(red: 1.0, green: 0.38, blue: 0.0, alpha: 1)
-                    self?.body.strokeColor = NSColor(red: 1.0, green: 0.65, blue: 0.1, alpha: 1)
+                    self?.body.fillColor   = PlatformColor(red: 1.0, green: 0.38, blue: 0.0, alpha: 1)
+                    self?.body.strokeColor = PlatformColor(red: 1.0, green: 0.65, blue: 0.1, alpha: 1)
                     self?.body.glowWidth   = 10
                 }
             ]),
@@ -61,8 +61,8 @@ final class PredatorNode: SKNode {
 
     func setHunting(_ hunting: Bool) {
         body.fillColor = hunting
-            ? NSColor(red: 1.0, green: 0.10, blue: 0.0, alpha: 1)
-            : NSColor(red: 1.0, green: 0.38, blue: 0.0, alpha: 1)
+            ? PlatformColor(red: 1.0, green: 0.10, blue: 0.0, alpha: 1)
+            : PlatformColor(red: 1.0, green: 0.38, blue: 0.0, alpha: 1)
     }
 
     // Rage shake → grow → shrink out. Calls completion when done.
@@ -70,8 +70,8 @@ final class PredatorNode: SKNode {
         body.removeAllActions()
 
         // Turn red-hot
-        body.fillColor = NSColor(red: 1.0, green: 0.05, blue: 0.05, alpha: 1)
-        body.strokeColor = NSColor(red: 1.0, green: 0.4, blue: 0.0, alpha: 1)
+        body.fillColor = PlatformColor(red: 1.0, green: 0.05, blue: 0.05, alpha: 1)
+        body.strokeColor = PlatformColor(red: 1.0, green: 0.4, blue: 0.0, alpha: 1)
         body.glowWidth = 18
 
         // Shake = rapid left-right offsets on the body

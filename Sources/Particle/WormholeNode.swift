@@ -19,15 +19,15 @@ final class WormholeNode: SKNode {
     private func buildVisuals() {
         // Faint gravity-field disc
         let field = SKShapeNode(circleOfRadius: WormholeNode.gravityRadius)
-        field.fillColor = NSColor(red: 0.28, green: 0, blue: 0.5, alpha: 0.04)
-        field.strokeColor = NSColor(red: 0.5, green: 0, blue: 0.9, alpha: 0.12)
+        field.fillColor = PlatformColor(red: 0.28, green: 0, blue: 0.5, alpha: 0.04)
+        field.strokeColor = PlatformColor(red: 0.5, green: 0, blue: 0.9, alpha: 0.12)
         field.lineWidth = 1
         addChild(field)
 
         // Event horizon glow ring
         let horizon = SKShapeNode(circleOfRadius: WormholeNode.killRadius + 6)
         horizon.fillColor = .clear
-        horizon.strokeColor = NSColor(red: 0.8, green: 0, blue: 1, alpha: 0.9)
+        horizon.strokeColor = PlatformColor(red: 0.8, green: 0, blue: 1, alpha: 0.9)
         horizon.lineWidth = 2
         horizon.glowWidth = 16
         addChild(horizon)
@@ -38,25 +38,25 @@ final class WormholeNode: SKNode {
 
         // Singularity core
         let core = SKShapeNode(circleOfRadius: WormholeNode.killRadius)
-        core.fillColor = NSColor(red: 0.04, green: 0, blue: 0.08, alpha: 0.97)
+        core.fillColor = PlatformColor(red: 0.04, green: 0, blue: 0.08, alpha: 0.97)
         core.strokeColor = .clear
         core.glowWidth = 4
         addChild(core)
 
         // Inner ring — 10 dots, counter-clockwise
         addChild(makeDotRing(count: 10, radius: WormholeNode.killRadius + 13,
-                             dotR: 2.5, accent: 3, color: NSColor(red: 0.8, green: 0.1, blue: 1, alpha: 1),
+                             dotR: 2.5, accent: 3, color: PlatformColor(red: 0.8, green: 0.1, blue: 1, alpha: 1),
                              duration: -1.7))
 
         // Outer ring — 7 dots, clockwise
         addChild(makeDotRing(count: 7, radius: WormholeNode.killRadius + 26,
-                             dotR: 1.8, accent: 0, color: NSColor(red: 0.5, green: 0, blue: 0.8, alpha: 0.5),
+                             dotR: 1.8, accent: 0, color: PlatformColor(red: 0.5, green: 0, blue: 0.8, alpha: 0.5),
                              duration: 3.1))
     }
 
     // duration < 0 = counter-clockwise
     private func makeDotRing(count: Int, radius: CGFloat, dotR: CGFloat,
-                              accent: Int, color: NSColor, duration: Double) -> SKNode {
+                              accent: Int, color: PlatformColor, duration: Double) -> SKNode {
         let ring = SKNode()
         for i in 0..<count {
             let isBig = accent > 0 && i % accent == 0

@@ -40,13 +40,13 @@ final class SafeZoneNode: SKNode {
     private func build() {
         // Fill disc
         let fill = SKShapeNode(circleOfRadius: radius)
-        fill.fillColor   = NSColor(red: 0.55, green: 0.10, blue: 0.90, alpha: 0.10)
+        fill.fillColor   = PlatformColor(red: 0.55, green: 0.10, blue: 0.90, alpha: 0.10)
         fill.strokeColor = .clear
         addChild(fill)
 
         // Animated ring
         ring.fillColor   = .clear
-        ring.strokeColor = NSColor(red: 0.70, green: 0.27, blue: 1.00, alpha: 0.70)
+        ring.strokeColor = PlatformColor(red: 0.70, green: 0.27, blue: 1.00, alpha: 0.70)
         ring.lineWidth   = 2
         ring.glowWidth   = 8
         addChild(ring)
@@ -85,11 +85,11 @@ final class SafeZoneNode: SKNode {
         if isUnlimited {
             centerLbl.text      = "SAFE"
             centerLbl.fontSize  = 11
-            centerLbl.fontColor = NSColor(red: 0.70, green: 0.27, blue: 1.00, alpha: 0.60)
+            centerLbl.fontColor = PlatformColor(red: 0.70, green: 0.27, blue: 1.00, alpha: 0.60)
         } else if isFull {
             centerLbl.text      = "FULL"
             centerLbl.fontSize  = 14
-            centerLbl.fontColor = NSColor(red: 1, green: 0.18, blue: 0.18, alpha: 0.90)
+            centerLbl.fontColor = PlatformColor(red: 1, green: 0.18, blue: 0.18, alpha: 0.90)
         } else {
             let rem   = remaining
             let ratio = CGFloat(occupancy) / CGFloat(capacity)
@@ -99,18 +99,18 @@ final class SafeZoneNode: SKNode {
         }
     }
 
-    private func labelColor(for ratio: CGFloat) -> NSColor {
+    private func labelColor(for ratio: CGFloat) -> PlatformColor {
         switch ratio {
-        case ..<0.33: return NSColor(red: 0.00, green: 0.96, blue: 1.00, alpha: 0.80)   // cyan — plenty
-        case ..<0.66: return NSColor(red: 1.00, green: 0.90, blue: 0.00, alpha: 0.85)   // yellow — filling
-        default:      return NSColor(red: 1.00, green: 0.45, blue: 0.00, alpha: 0.90)   // orange — almost full
+        case ..<0.33: return PlatformColor(red: 0.00, green: 0.96, blue: 1.00, alpha: 0.80)   // cyan — plenty
+        case ..<0.66: return PlatformColor(red: 1.00, green: 0.90, blue: 0.00, alpha: 0.85)   // yellow — filling
+        default:      return PlatformColor(red: 1.00, green: 0.45, blue: 0.00, alpha: 0.90)   // orange — almost full
         }
     }
 
     private func playFullEffect() {
         // Ring flashes red
         ring.removeAllActions()
-        ring.strokeColor = NSColor(red: 1, green: 0.15, blue: 0.15, alpha: 1)
+        ring.strokeColor = PlatformColor(red: 1, green: 0.15, blue: 0.15, alpha: 1)
         ring.glowWidth   = 14
         ring.run(.repeatForever(.sequence([
             .fadeAlpha(to: 0.30, duration: 0.35),

@@ -39,9 +39,12 @@ final class GameScene: SKScene {
     private var wormholes: [WormholeNode]  = []
 
     // MARK: Input
-    private var mousePos    = CGPoint.zero
-    private var mouseActive = false
-    private var mouseRepels = false
+    private struct InputState {
+        var position: CGPoint = .zero
+        var active:   Bool    = false
+        var repels:   Bool    = false
+    }
+    private var input = InputState()
 
     // MARK: Game state
     private enum Phase { case title, playing, waveComplete, gameOver, enteringInitials, scoreboard }
@@ -73,7 +76,7 @@ final class GameScene: SKScene {
     // MARK: - Lifecycle
 
     override func didMove(to view: SKView) {
-        backgroundColor = NSColor(red: 0.04, green: 0.00, blue: 0.07, alpha: 1)
+        backgroundColor = PlatformColor(red: 0.04, green: 0.00, blue: 0.07, alpha: 1)
         drawGrid()
         showTitleScreen()
     }
@@ -100,7 +103,7 @@ final class GameScene: SKScene {
 
         // Dim vignette
         let bg = SKShapeNode(rect: CGRect(origin: .zero, size: size))
-        bg.fillColor = NSColor.black.withAlphaComponent(0.55)
+        bg.fillColor = PlatformColor.black.withAlphaComponent(0.55)
         bg.strokeColor = .clear
         panel.addChild(bg)
 
@@ -108,7 +111,7 @@ final class GameScene: SKScene {
         let title = SKLabelNode(text: "PARTICLE")
         title.fontName  = "Courier-Bold"
         title.fontSize  = 72
-        title.fontColor = NSColor(red: 1.00, green: 0.18, blue: 0.47, alpha: 1)
+        title.fontColor = PlatformColor(red: 1.00, green: 0.18, blue: 0.47, alpha: 1)
         title.position  = CGPoint(x: size.width/2, y: size.height/2 + 60)
         title.horizontalAlignmentMode = .center
         panel.addChild(title)
@@ -121,7 +124,7 @@ final class GameScene: SKScene {
         let sub = SKLabelNode(text: "herd the swarm · escape the predators")
         sub.fontName  = "Courier"
         sub.fontSize  = 16
-        sub.fontColor = NSColor(red: 0.00, green: 0.96, blue: 1.00, alpha: 0.70)
+        sub.fontColor = PlatformColor(red: 0.00, green: 0.96, blue: 1.00, alpha: 0.70)
         sub.position  = CGPoint(x: size.width/2, y: size.height/2 + 14)
         sub.horizontalAlignmentMode = .center
         panel.addChild(sub)
@@ -130,15 +133,15 @@ final class GameScene: SKScene {
         let ctrl = SKLabelNode(text: "hover to attract   right-click to repel")
         ctrl.fontName  = "Courier"
         ctrl.fontSize  = 13
-        ctrl.fontColor = NSColor(red: 0.22, green: 1.00, blue: 0.08, alpha: 0.60)
+        ctrl.fontColor = PlatformColor(red: 0.22, green: 1.00, blue: 0.08, alpha: 0.60)
         ctrl.position  = CGPoint(x: size.width/2, y: size.height/2 - 16)
         ctrl.horizontalAlignmentMode = .center
         panel.addChild(ctrl)
 
         // Start button
         let btnBg = SKShapeNode(rectOf: CGSize(width: 220, height: 48), cornerRadius: 6)
-        btnBg.fillColor   = NSColor(red: 0.55, green: 0.10, blue: 0.90, alpha: 0.25)
-        btnBg.strokeColor = NSColor(red: 0.70, green: 0.27, blue: 1.00, alpha: 0.85)
+        btnBg.fillColor   = PlatformColor(red: 0.55, green: 0.10, blue: 0.90, alpha: 0.25)
+        btnBg.strokeColor = PlatformColor(red: 0.70, green: 0.27, blue: 1.00, alpha: 0.85)
         btnBg.lineWidth   = 2
         btnBg.glowWidth   = 8
         btnBg.position    = CGPoint(x: size.width/2, y: size.height/2 - 78)
@@ -151,7 +154,7 @@ final class GameScene: SKScene {
         let btnLabel = SKLabelNode(text: "CLICK TO START")
         btnLabel.fontName  = "Courier-Bold"
         btnLabel.fontSize  = 20
-        btnLabel.fontColor = NSColor(red: 0.70, green: 0.27, blue: 1.00, alpha: 1)
+        btnLabel.fontColor = PlatformColor(red: 0.70, green: 0.27, blue: 1.00, alpha: 1)
         btnLabel.verticalAlignmentMode = .center
         btnLabel.position = .zero
         btnBg.addChild(btnLabel)
@@ -173,7 +176,7 @@ final class GameScene: SKScene {
         let header = SKLabelNode(text: "— HIGH SCORES —")
         header.fontName  = "Courier-Bold"
         header.fontSize  = 12
-        header.fontColor = NSColor(red: 0, green: 0.96, blue: 1, alpha: 0.55)
+        header.fontColor = PlatformColor(red: 0, green: 0.96, blue: 1, alpha: 0.55)
         header.position  = CGPoint(x: cx, y: bandCY + bandH / 2 + 14)
         panel.addChild(header)
 
@@ -190,10 +193,10 @@ final class GameScene: SKScene {
         let content = SKNode()
         cropNode.addChild(content)
 
-        let colors: [NSColor] = [
-            NSColor(red: 1.00, green: 0.90, blue: 0.00, alpha: 1),  // gold   — #1
-            NSColor(red: 0.75, green: 0.75, blue: 0.75, alpha: 1),  // silver — #2
-            NSColor(red: 1.00, green: 0.55, blue: 0.20, alpha: 1),  // bronze — #3
+        let colors: [PlatformColor] = [
+            PlatformColor(red: 1.00, green: 0.90, blue: 0.00, alpha: 1),  // gold   — #1
+            PlatformColor(red: 0.75, green: 0.75, blue: 0.75, alpha: 1),  // silver — #2
+            PlatformColor(red: 1.00, green: 0.55, blue: 0.20, alpha: 1),  // bronze — #3
         ]
 
         func addRow(_ i: Int, _ entry: ScoreEntry, atY y: CGFloat) {
@@ -205,7 +208,7 @@ final class GameScene: SKScene {
             let lbl = SKLabelNode(text: text)
             lbl.fontName  = "Courier-Bold"
             lbl.fontSize  = 14
-            lbl.fontColor = i < colors.count ? colors[i] : NSColor(white: 0.70, alpha: 1)
+            lbl.fontColor = i < colors.count ? colors[i] : PlatformColor(white: 0.70, alpha: 1)
             lbl.position  = CGPoint(x: 0, y: y)
             content.addChild(lbl)
         }
@@ -236,7 +239,7 @@ final class GameScene: SKScene {
         let fadeH: CGFloat = 28
         for (sign, offsetY): (CGFloat, CGFloat) in [(1, bandH / 2 - fadeH / 2), (-1, -bandH / 2 + fadeH / 2)] {
             let fade = SKShapeNode(rectOf: CGSize(width: bandW, height: fadeH))
-            fade.fillColor  = NSColor(red: 0.04, green: 0, blue: 0.07,
+            fade.fillColor  = PlatformColor(red: 0.04, green: 0, blue: 0.07,
                                       alpha: sign > 0 ? 0.92 : 0.88)
             fade.strokeColor = .clear
             fade.position   = CGPoint(x: cx, y: bandCY + offsetY)
@@ -315,7 +318,7 @@ final class GameScene: SKScene {
 
     private func drawGrid() {
         let step: CGFloat = 56
-        let color = NSColor(red: 0.14, green: 0.00, blue: 0.22, alpha: 1)
+        let color = PlatformColor(red: 0.14, green: 0.00, blue: 0.22, alpha: 1)
         let path = CGMutablePath()
         var x: CGFloat = 0
         while x <= size.width  { path.move(to: CGPoint(x: x, y: 0)); path.addLine(to: CGPoint(x: x, y: size.height)); x += step }
@@ -461,7 +464,7 @@ final class GameScene: SKScene {
         // Warning pulse at spawn point — 1.5s before the wormhole materialises
         let warning = SKShapeNode(circleOfRadius: WormholeNode.killRadius * 2.5)
         warning.fillColor = .clear
-        warning.strokeColor = NSColor(red: 0.8, green: 0, blue: 1, alpha: 0.7)
+        warning.strokeColor = PlatformColor(red: 0.8, green: 0, blue: 1, alpha: 0.7)
         warning.lineWidth = 2
         warning.glowWidth = 10
         warning.position = spawnPt
@@ -531,9 +534,9 @@ final class GameScene: SKScene {
     // MARK: - HUD
 
     private func buildHUD() {
-        let yellow = NSColor(red: 1.00, green: 0.90, blue: 0.00, alpha: 1)
-        let pink   = NSColor(red: 1.00, green: 0.18, blue: 0.47, alpha: 1)
-        let cyan   = NSColor(red: 0.00, green: 0.96, blue: 1.00, alpha: 1)
+        let yellow = PlatformColor(red: 1.00, green: 0.90, blue: 0.00, alpha: 1)
+        let pink   = PlatformColor(red: 1.00, green: 0.18, blue: 0.47, alpha: 1)
+        let cyan   = PlatformColor(red: 0.00, green: 0.96, blue: 1.00, alpha: 1)
 
         scoreLabel = hudLabel(text: "SCORE: 0",   color: yellow, size: 16)
         scoreLabel.position = CGPoint(x: 14, y: size.height - 28)
@@ -551,14 +554,14 @@ final class GameScene: SKScene {
         timerLabel.position = CGPoint(x: size.width / 2, y: size.height - 48)
         timerLabel.horizontalAlignmentMode = .center
 
-        boidCountLabel = hudLabel(text: "SAFE: 0  FREE: \(Config.boidCount)", color: NSColor(red: 0.22, green: 1, blue: 0.08, alpha: 0.85), size: 13)
+        boidCountLabel = hudLabel(text: "SAFE: 0  FREE: \(Config.boidCount)", color: PlatformColor(red: 0.22, green: 1, blue: 0.08, alpha: 0.85), size: 13)
         boidCountLabel.position = CGPoint(x: 14, y: size.height - 48)
         boidCountLabel.horizontalAlignmentMode = .left
 
         [scoreLabel, livesLabel, waveLabel, timerLabel, boidCountLabel].forEach { addChild($0!) }
     }
 
-    private func hudLabel(text: String, color: NSColor, size: CGFloat) -> SKLabelNode {
+    private func hudLabel(text: String, color: PlatformColor, size: CGFloat) -> SKLabelNode {
         let l = SKLabelNode(text: text)
         l.fontName = "Courier-Bold"
         l.fontSize = size
@@ -582,8 +585,8 @@ final class GameScene: SKScene {
         let free = boids.filter { $0.state == .wandering || $0.state == .threatened }.count
         boidCountLabel.text = "SAFE: \(safe)  FREE: \(free)"
         boidCountLabel.fontColor = free == 0
-            ? NSColor(red: 0.7, green: 0.27, blue: 1, alpha: 1)   // purple when all in
-            : NSColor(red: 0.22, green: 1, blue: 0.08, alpha: 0.85) // acid green normally
+            ? PlatformColor(red: 0.7, green: 0.27, blue: 1, alpha: 1)   // purple when all in
+            : PlatformColor(red: 0.22, green: 1, blue: 0.08, alpha: 0.85) // acid green normally
     }
 
     private func refreshTimer() {
@@ -591,11 +594,11 @@ final class GameScene: SKScene {
         timerLabel.text = secs > 0 ? "TIME: \(secs)" : "TIME: --"
         let ratio = waveDurationValue > 0 ? waveTimeRemaining / waveDurationValue : 1
         if ratio < 0.25 {
-            timerLabel.fontColor = NSColor(red: 1, green: 0.18, blue: 0.18, alpha: 1)
+            timerLabel.fontColor = PlatformColor(red: 1, green: 0.18, blue: 0.18, alpha: 1)
         } else if ratio < 0.5 {
-            timerLabel.fontColor = NSColor(red: 1, green: 0.55, blue: 0,    alpha: 1)
+            timerLabel.fontColor = PlatformColor(red: 1, green: 0.55, blue: 0,    alpha: 1)
         } else {
-            timerLabel.fontColor = NSColor(red: 0, green: 0.96, blue: 1,    alpha: 1)
+            timerLabel.fontColor = PlatformColor(red: 0, green: 0.96, blue: 1,    alpha: 1)
         }
     }
 
@@ -669,7 +672,7 @@ final class GameScene: SKScene {
 
     private func flashTimesUp() {
         let lbl = addLabel("TIME'S UP!", at: CGPoint(x: size.width/2, y: size.height/2 + 55),
-                           font: 28, color: NSColor(red: 1, green: 0.45, blue: 0, alpha: 1), z: 25)
+                           font: 28, color: PlatformColor(red: 1, green: 0.45, blue: 0, alpha: 1), z: 25)
         lbl.run(.sequence([.wait(forDuration: 1.6), .fadeOut(withDuration: 0.4), .removeFromParent()]))
     }
 
@@ -763,13 +766,13 @@ final class GameScene: SKScene {
 
         // Mouse influence — linear falloff, scaled with wave speed so it
         // always has enough authority to override the flee force
-        if mouseActive {
-            let tm = mousePos - boid.position
+        if input.active {
+            let tm = input.position - boid.position
             let d  = tm.magnitude
             if d < Config.rPlayer && d > 0 {
                 let s = 1.0 - (d / Config.rPlayer)   // linear, stronger at distance than quadratic was
                 let speedScale = sqrt(waveBoidMaxSpeed() / Config.baseBoidSpeed)
-                force += (mouseRepels ? -tm.normalized() : tm.normalized()) * Config.wPlayer * s * speedScale
+                force += (input.repels ? -tm.normalized() : tm.normalized()) * Config.wPlayer * s * speedScale
             }
         }
 
@@ -915,7 +918,7 @@ final class GameScene: SKScene {
             var msg = "WAVE \(self.wave) CLEAR  +\(totalBonus)"
             if timeBonus > 0 { msg += "  (\(Int(self.waveTimeRemaining))s left)" }
             let lbl = self.addLabel(msg, at: CGPoint(x: self.size.width/2, y: self.size.height/2),
-                                    font: 34, color: NSColor(red: 0, green: 0.96, blue: 1, alpha: 1), z: 30)
+                                    font: 34, color: PlatformColor(red: 0, green: 0.96, blue: 1, alpha: 1), z: 30)
             lbl.run(.sequence([
                 .group([.scale(to: 1.2, duration: 0.2), .fadeAlpha(to: 1, duration: 0.2)]),
                 .wait(forDuration: 1.3),
@@ -992,7 +995,7 @@ final class GameScene: SKScene {
         }
     }
 
-    private func spawnDeathExplosion(at pos: CGPoint, color: NSColor) {
+    private func spawnDeathExplosion(at pos: CGPoint, color: PlatformColor) {
         // Primary shockwave ring
         let ring = SKShapeNode(circleOfRadius: 5)
         ring.fillColor  = .clear
@@ -1010,7 +1013,7 @@ final class GameScene: SKScene {
         // Secondary white ring — slight delay so it reads as two pulses
         let ring2 = SKShapeNode(circleOfRadius: 4)
         ring2.fillColor  = .clear
-        ring2.strokeColor = NSColor.white.withAlphaComponent(0.75)
+        ring2.strokeColor = PlatformColor.white.withAlphaComponent(0.75)
         ring2.lineWidth  = 1
         ring2.glowWidth  = 4
         ring2.position   = pos
@@ -1023,10 +1026,10 @@ final class GameScene: SKScene {
         ]))
 
         // Sparks flying outward
-        let sparkColors: [NSColor] = [
+        let sparkColors: [PlatformColor] = [
             color,
             color.withAlphaComponent(0.6),
-            NSColor(red: 1, green: 0.55, blue: 0, alpha: 1),
+            PlatformColor(red: 1, green: 0.55, blue: 0, alpha: 1),
             .white,
         ]
         for i in 0..<10 {
@@ -1078,7 +1081,7 @@ final class GameScene: SKScene {
         AudioManager.shared.play("gameover")
 
         let overlay = SKShapeNode(rect: CGRect(origin: .zero, size: size))
-        overlay.fillColor = NSColor.black.withAlphaComponent(0.70)
+        overlay.fillColor = PlatformColor.black.withAlphaComponent(0.70)
         overlay.strokeColor = .clear
         overlay.zPosition = 50
         overlay.name = "gameOverOverlay"
@@ -1087,10 +1090,10 @@ final class GameScene: SKScene {
         let cx = size.width / 2, cy = size.height / 2
         addLabel("GAME OVER",
                  at: CGPoint(x: cx, y: cy + 60),
-                 font: 52, color: NSColor(red: 1, green: 0.18, blue: 0.47, alpha: 1), z: 51)
+                 font: 52, color: PlatformColor(red: 1, green: 0.18, blue: 0.47, alpha: 1), z: 51)
         addLabel("SCORE: \(score)   WAVE \(wave)",
                  at: CGPoint(x: cx, y: cy + 10),
-                 font: 22, color: NSColor(red: 1, green: 0.90, blue: 0, alpha: 1), z: 51)
+                 font: 22, color: PlatformColor(red: 1, green: 0.90, blue: 0, alpha: 1), z: 51)
 
         // After a moment, slide into initials entry
         run(.sequence([.wait(forDuration: 1.8), .run { [weak self] in self?.showInitialsEntry() }]))
@@ -1111,21 +1114,21 @@ final class GameScene: SKScene {
         let prompt = SKLabelNode(text: "ENTER YOUR INITIALS")
         prompt.fontName = "Courier-Bold"
         prompt.fontSize = 20
-        prompt.fontColor = NSColor(red: 0, green: 0.96, blue: 1, alpha: 1)
+        prompt.fontColor = PlatformColor(red: 0, green: 0.96, blue: 1, alpha: 1)
         prompt.position = CGPoint(x: cx, y: cy - 40)
         panel.addChild(prompt)
 
         let hint = SKLabelNode(text: "TYPE UP TO 3 LETTERS  •  BACKSPACE TO DELETE  •  RETURN TO CONFIRM")
         hint.fontName = "Courier"
         hint.fontSize = 11
-        hint.fontColor = NSColor(white: 0.55, alpha: 1)
+        hint.fontColor = PlatformColor(white: 0.55, alpha: 1)
         hint.position = CGPoint(x: cx, y: cy - 100)
         panel.addChild(hint)
 
         let slots = SKLabelNode(text: "_ _ _")
         slots.fontName = "Courier-Bold"
         slots.fontSize = 48
-        slots.fontColor = NSColor(red: 1, green: 0.18, blue: 0.47, alpha: 1)
+        slots.fontColor = PlatformColor(red: 1, green: 0.18, blue: 0.47, alpha: 1)
         slots.position = CGPoint(x: cx, y: cy - 72)
         slots.name = "initialsSlots"
         panel.addChild(slots)
@@ -1153,7 +1156,7 @@ final class GameScene: SKScene {
         childNode(withName: "gameOverOverlay")?.removeFromParent()
 
         let bg = SKShapeNode(rect: CGRect(origin: .zero, size: size))
-        bg.fillColor = NSColor(red: 0.04, green: 0, blue: 0.10, alpha: 0.95)
+        bg.fillColor = PlatformColor(red: 0.04, green: 0, blue: 0.10, alpha: 0.95)
         bg.strokeColor = .clear
         bg.zPosition = 53
         bg.name = "scoreboardBg"
@@ -1165,7 +1168,7 @@ final class GameScene: SKScene {
         let title = SKLabelNode(text: "HIGH SCORES")
         title.fontName = "Courier-Bold"
         title.fontSize = 32
-        title.fontColor = NSColor(red: 0, green: 0.96, blue: 1, alpha: 1)
+        title.fontColor = PlatformColor(red: 0, green: 0.96, blue: 1, alpha: 1)
         title.position = CGPoint(x: cx, y: y)
         title.zPosition = 54
         addChild(title)
@@ -1184,8 +1187,8 @@ final class GameScene: SKScene {
             lbl.fontName = "Courier-Bold"
             lbl.fontSize = 16
             lbl.fontColor = isNew
-                ? NSColor(red: 1, green: 0.90, blue: 0, alpha: 1)
-                : NSColor(white: 0.80, alpha: 1)
+                ? PlatformColor(red: 1, green: 0.90, blue: 0, alpha: 1)
+                : PlatformColor(white: 0.80, alpha: 1)
             lbl.position = CGPoint(x: cx, y: y)
             lbl.zPosition = 54
             addChild(lbl)
@@ -1196,7 +1199,7 @@ final class GameScene: SKScene {
             let lbl = SKLabelNode(text: "NO SCORES YET")
             lbl.fontName = "Courier"
             lbl.fontSize = 16
-            lbl.fontColor = NSColor(white: 0.5, alpha: 1)
+            lbl.fontColor = PlatformColor(white: 0.5, alpha: 1)
             lbl.position = CGPoint(x: cx, y: y)
             lbl.zPosition = 54
             addChild(lbl)
@@ -1205,7 +1208,7 @@ final class GameScene: SKScene {
         let tap = SKLabelNode(text: "[ CLICK TO PLAY AGAIN ]")
         tap.fontName = "Courier-Bold"
         tap.fontSize = 16
-        tap.fontColor = NSColor(red: 0, green: 0.96, blue: 1, alpha: 1)
+        tap.fontColor = PlatformColor(red: 0, green: 0.96, blue: 1, alpha: 1)
         tap.position = CGPoint(x: cx, y: size.height / 2 - 200)
         tap.zPosition = 54
         tap.run(.repeatForever(.sequence([.fadeAlpha(to: 0.25, duration: 0.55), .fadeAlpha(to: 1, duration: 0.55)])))
@@ -1213,7 +1216,7 @@ final class GameScene: SKScene {
     }
 
     @discardableResult
-    private func addLabel(_ text: String, at pt: CGPoint, font: CGFloat, color: NSColor, z: CGFloat) -> SKLabelNode {
+    private func addLabel(_ text: String, at pt: CGPoint, font: CGFloat, color: PlatformColor, z: CGFloat) -> SKLabelNode {
         let l = SKLabelNode(text: text)
         l.fontName = "Courier-Bold"
         l.fontSize = font
@@ -1231,7 +1234,7 @@ final class GameScene: SKScene {
         score = 0; lives = 3; wave = 1; lastTime = nil
         waveCompleteGuard = false; timerFired = false
         wormholeSpawnedThisWave = false; wormholeRolledThisWave = false
-        backgroundColor = NSColor(red: 0.04, green: 0.00, blue: 0.07, alpha: 1)
+        backgroundColor = PlatformColor(red: 0.04, green: 0.00, blue: 0.07, alpha: 1)
         drawGrid()
         showTitleScreen()   // back to title between runs
     }
@@ -1259,7 +1262,7 @@ final class GameScene: SKScene {
         let l = SKLabelNode(text: text)
         l.fontName = "Courier-Bold"
         l.fontSize = 13
-        l.fontColor = NSColor(red: 0.70, green: 0.27, blue: 1, alpha: 1)
+        l.fontColor = PlatformColor(red: 0.70, green: 0.27, blue: 1, alpha: 1)
         l.position = point
         l.zPosition = 20
         addChild(l)
@@ -1269,8 +1272,8 @@ final class GameScene: SKScene {
     // MARK: - Mouse
 
     override func mouseMoved(with event: NSEvent) {
-        mousePos = event.location(in: self)
-        mouseActive = true
+        input.position = event.location(in: self)
+        input.active = true
     }
 
     override func mouseDown(with event: NSEvent) {
@@ -1279,20 +1282,20 @@ final class GameScene: SKScene {
         case .scoreboard: restart();   return
         default: break
         }
-        mousePos    = event.location(in: self)
-        mouseActive = true
-        mouseRepels = false
+        input.position    = event.location(in: self)
+        input.active = true
+        input.repels = false
     }
 
     override func rightMouseDown(with event: NSEvent) {
-        mousePos    = event.location(in: self)
-        mouseActive = true
-        mouseRepels = true
+        input.position    = event.location(in: self)
+        input.active = true
+        input.repels = true
     }
 
-    override func rightMouseUp(with event: NSEvent) { mouseRepels = false }
+    override func rightMouseUp(with event: NSEvent) { input.repels = false }
 
-    override func mouseDragged(with event: NSEvent) { mousePos = event.location(in: self) }
+    override func mouseDragged(with event: NSEvent) { input.position = event.location(in: self) }
 
     // MARK: - Debug keys
 
@@ -1313,15 +1316,14 @@ final class GameScene: SKScene {
             return
         }
 
+        #if DEBUG
         guard let ch = event.characters else { return }
         switch ch {
-        case "w":   // Win current wave instantly
-            debugWinWave()
-        case "k":   // Kill a boid (stress test lives)
-            if let b = boids.first(where: { $0.state == .wandering }) { devour(b) }
-        default:
-            break
+        case "w": debugWinWave()
+        case "k": if let b = boids.first(where: { $0.state == .wandering }) { devour(b) }
+        default:  break
         }
+        #endif
     }
 
     private func updateInitialsDisplay() {

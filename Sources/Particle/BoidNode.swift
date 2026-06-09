@@ -6,14 +6,14 @@ final class BoidNode: SKNode {
     var velocity: CGVector
     var state: BoidState = .spawning
 
-    let neonColor: NSColor
+    let neonColor: PlatformColor
     private let core: SKShapeNode
     private let halo: SKShapeNode
 
-    private static let palette: [NSColor] = [
-        NSColor(red: 0.00, green: 0.96, blue: 1.00, alpha: 1), // electric cyan
-        NSColor(red: 1.00, green: 0.18, blue: 0.47, alpha: 1), // hot pink
-        NSColor(red: 0.22, green: 1.00, blue: 0.08, alpha: 1), // acid green
+    private static let palette: [PlatformColor] = [
+        PlatformColor(red: 0.00, green: 0.96, blue: 1.00, alpha: 1), // electric cyan
+        PlatformColor(red: 1.00, green: 0.18, blue: 0.47, alpha: 1), // hot pink
+        PlatformColor(red: 0.22, green: 1.00, blue: 0.08, alpha: 1), // acid green
     ]
 
     override init() {
@@ -23,7 +23,7 @@ final class BoidNode: SKNode {
         velocity = CGVector(dx: cos(angle) * speed, dy: sin(angle) * speed)
 
         halo = SKShapeNode(circleOfRadius: 10)
-        halo.fillColor = NSColor.white.withAlphaComponent(0.06)
+        halo.fillColor = PlatformColor.white.withAlphaComponent(0.06)
         halo.strokeColor = .clear
         halo.zPosition = -1
 
@@ -75,12 +75,12 @@ final class BoidNode: SKNode {
             core.fillColor = neonColor
             core.strokeColor = neonColor.withAlphaComponent(0.5)
             core.glowWidth = 6
-            halo.fillColor = NSColor.white.withAlphaComponent(0.06)
+            halo.fillColor = PlatformColor.white.withAlphaComponent(0.06)
         case .threatened:
             core.fillColor = .white
-            core.strokeColor = NSColor(red: 1, green: 0.3, blue: 0.3, alpha: 0.8)
+            core.strokeColor = PlatformColor(red: 1, green: 0.3, blue: 0.3, alpha: 0.8)
             core.glowWidth = 3
-            halo.fillColor = NSColor.red.withAlphaComponent(0.08)
+            halo.fillColor = PlatformColor.red.withAlphaComponent(0.08)
         case .safe:
             core.fillColor = neonColor.withAlphaComponent(0.75)
             core.strokeColor = neonColor
