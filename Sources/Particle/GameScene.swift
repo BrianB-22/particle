@@ -1269,11 +1269,12 @@ final class GameScene: SKScene {
         l.run(.sequence([.group([.moveBy(x: 0, y: 28, duration: 0.65), .fadeOut(withDuration: 0.65)]), .removeFromParent()]))
     }
 
-    // MARK: - Mouse
+    // MARK: - Input (macOS)
 
+    #if os(macOS)
     override func mouseMoved(with event: NSEvent) {
         input.position = event.location(in: self)
-        input.active = true
+        input.active   = true
     }
 
     override func mouseDown(with event: NSEvent) {
@@ -1282,31 +1283,27 @@ final class GameScene: SKScene {
         case .scoreboard: restart();   return
         default: break
         }
-        input.position    = event.location(in: self)
-        input.active = true
-        input.repels = false
+        input.position = event.location(in: self)
+        input.active   = true
+        input.repels   = false
     }
 
     override func rightMouseDown(with event: NSEvent) {
-        input.position    = event.location(in: self)
-        input.active = true
-        input.repels = true
+        input.position = event.location(in: self)
+        input.active   = true
+        input.repels   = true
     }
 
-    override func rightMouseUp(with event: NSEvent) { input.repels = false }
-
-    override func mouseDragged(with event: NSEvent) { input.position = event.location(in: self) }
-
-    // MARK: - Debug keys
+    override func rightMouseUp(with event: NSEvent)  { input.repels = false }
+    override func mouseDragged(with event: NSEvent)  { input.position = event.location(in: self) }
 
     override func keyDown(with event: NSEvent) {
-        // Initials entry
         if phase == .enteringInitials {
             let keyCode = event.keyCode
-            if keyCode == 51 {  // Backspace
+            if keyCode == 51 {
                 if !initialsInput.isEmpty { initialsInput.removeLast() }
                 updateInitialsDisplay()
-            } else if keyCode == 36 || keyCode == 76 {  // Return / Enter
+            } else if keyCode == 36 || keyCode == 76 {
                 confirmInitials()
             } else if let ch = event.characters?.first, ch.isLetter, initialsInput.count < 3 {
                 initialsInput.append(ch.uppercased().first!)
@@ -1315,7 +1312,6 @@ final class GameScene: SKScene {
             }
             return
         }
-
         #if DEBUG
         guard let ch = event.characters else { return }
         switch ch {
@@ -1325,6 +1321,38 @@ final class GameScene: SKScene {
         }
         #endif
     }
+    #endif
+
+    // MARK: - Input (iOS)
+
+    #if os(iOS)
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let touch = touches.first else { return }
+        let loc = touch.location(in: self)
+        switch phase {
+        case .title:      beginGame(); return
+        case .scoreboard: restart();   return
+        default: break
+        }
+        input.position = loc
+        input.active   = true
+        input.repels   = touches.count > 1   // two fingers = repel
+    }
+
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let touch = touches.first else { return }
+        input.position = touch.location(in: self)
+        input.repels   = touches.count > 1
+    }
+
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if touches.count <= 1 { input.active = false; input.repels = false }
+    }
+
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        input.active = false; input.repels = false
+    }
+    #endif
 
     private func updateInitialsDisplay() {
         let filled = initialsInput.map { String($0) }

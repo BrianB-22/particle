@@ -1,0 +1,56 @@
+name: Particle
+options:
+  bundleIdPrefix: me.bernacki
+  deploymentTarget:
+    macOS: "13.0"
+    iOS: "16.0"
+  xcodeVersion: "16"
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    ENABLE_HARDENED_RUNTIME: YES
+
+targets:
+
+  Particle-macOS:
+    type: application
+    platform: macOS
+    deploymentTarget: "13.0"
+    sources:
+      - path: Sources/Particle
+        excludes:
+          - sounds
+      - path: Sources/macOS
+    resources:
+      - path: Sources/Particle/sounds
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: me.bernacki.particle
+        PRODUCT_NAME: Particle
+        INFOPLIST_FILE: Sources/macOS/Info.plist
+        CODE_SIGN_STYLE: Automatic
+    scheme:
+      environmentVariables:
+        OS_ACTIVITY_MODE: disable
+
+  Particle-iOS:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - path: Sources/Particle
+        excludes:
+          - sounds
+          - AppDelegate.swift
+          - main.swift
+      - path: Sources/iOS
+    resources:
+      - path: Sources/Particle/sounds
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: me.bernacki.particle-ios
+        PRODUCT_NAME: Particle
+        INFOPLIST_FILE: Sources/iOS/Info.plist
+        CODE_SIGN_STYLE: Automatic
+        TARGETED_DEVICE_FAMILY: "1,2"
