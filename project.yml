@@ -20,13 +20,11 @@ targets:
     sources:
       - path: Sources/Particle
         excludes:
-          - sounds
           - AppDelegate.swift
           - main.swift
       - path: Sources/macOS
       - path: Sources/Assets.xcassets
-    resources:
-      - path: Sources/Particle/sounds
+    resources: []
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: me.bernacki.particle
@@ -45,12 +43,10 @@ targets:
     sources:
       - path: Sources/Particle
         excludes:
-          - sounds
           - AppDelegate.swift
           - main.swift
       - path: Sources/iOS
     resources:
-      - path: Sources/Particle/sounds
       - path: Sources/Assets.xcassets
     settings:
       base:
