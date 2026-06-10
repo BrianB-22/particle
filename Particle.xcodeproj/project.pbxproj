@@ -21,6 +21,7 @@
 		35E00C1AD931F9E98D791BA7 /* BoidNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D024CFEA46E5A860CF622504 /* BoidNode.swift */; };
 		363FD8096DA88D6D65E777E2 /* background_gameplay.wav in Resources */ = {isa = PBXBuildFile; fileRef = 589088FFBC8419E10CDCB9B2 /* background_gameplay.wav */; };
 		3791B1B9173F4CA76154DB4D /* BoidNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D024CFEA46E5A860CF622504 /* BoidNode.swift */; };
+		39E8470DE741627BD3A3DFBF /* meteor_inbound.wav in Resources */ = {isa = PBXBuildFile; fileRef = 4E866ED6E66F08483ADE8244 /* meteor_inbound.wav */; };
 		3E01211FDB82D2698CEA5898 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3AC645F7C28DED7CC843023A /* Assets.xcassets */; };
 		3F5BA5C62742C69805C63525 /* boid_safe4.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 62947E319451C1BB41154DE1 /* boid_safe4.mp3 */; };
 		40916F6222FB2C314537FF87 /* background_intro.wav in Resources */ = {isa = PBXBuildFile; fileRef = 44D4CB49DD0541B0AE01C0C5 /* background_intro.wav */; };
@@ -31,6 +32,7 @@
 		4EDB36CE145DD18F8C50CF0E /* PredatorNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E3D018769BCF0F853541425 /* PredatorNode.swift */; };
 		55AC1E0B690D6A949F0D4722 /* PlatformColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 328F25F26F67F657268F0824 /* PlatformColor.swift */; };
 		5CF121C27B3AE24BB8198E09 /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320A36F61F756CD4806BCEE5 /* GameScene.swift */; };
+		66AE8DF222BBD26CA514BE43 /* meteor_inbound.wav in Resources */ = {isa = PBXBuildFile; fileRef = 4E866ED6E66F08483ADE8244 /* meteor_inbound.wav */; };
 		826D287CA2B397A08F14BDC1 /* Math.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43B85B643F01E19D07D9850E /* Math.swift */; };
 		82E4757A25ED731B31E37267 /* boid_safe.wav in Resources */ = {isa = PBXBuildFile; fileRef = 4E3A3CFD32B4AEF147BB9D38 /* boid_safe.wav */; };
 		8734ED912B03B339AAC72741 /* BlackHoleNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B587CF9F1B572D6EF16FE6A /* BlackHoleNode.swift */; };
@@ -38,18 +40,22 @@
 		8A701AD767AE821BA89E7C32 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57EED99C04447DBF0062D150 /* SceneDelegate.swift */; };
 		91171E729A3070CCEAC9E237 /* boid_safe2.wav in Resources */ = {isa = PBXBuildFile; fileRef = BC6F7CF26CE3496D5ACCDEE3 /* boid_safe2.wav */; };
 		983C819E79A61B36647859E0 /* blackhole_appear.wav in Resources */ = {isa = PBXBuildFile; fileRef = FA6F4089F2A8933B8A9B7046 /* blackhole_appear.wav */; };
+		9A723972244522C58B2AD1E1 /* meteor_explosion.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = F9A533E01C9A2F3FE48C8385 /* meteor_explosion.mp3 */; };
 		9C3982689F6E9565772EFAD1 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F33AB7AD1A06A49E82E57AE /* AppDelegate.swift */; };
 		A00ECBF0DF0D4BB46EEBF2C3 /* background_gameplay.wav in Resources */ = {isa = PBXBuildFile; fileRef = 589088FFBC8419E10CDCB9B2 /* background_gameplay.wav */; };
 		A01E6A98FB0824FA31A30290 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58FF5D664A8AAA4803C0B563 /* main.swift */; };
 		A1EFF5722B6E26ED9BC844FE /* SafeZoneNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAB7DF8EF8E4EBB7FE4C7CEC /* SafeZoneNode.swift */; };
+		A41EDC096E6EEF3B3AD5B3CF /* GameVersion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AF198358A952B737A238D36 /* GameVersion.swift */; };
 		A8877FCF206B93773A499F0E /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320A36F61F756CD4806BCEE5 /* GameScene.swift */; };
 		AF192276EDDAAA05243BED4D /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E57DFA5423792AC06A5920D5 /* AudioManager.swift */; };
 		B09605225EA87B3E88BCF11C /* PredatorNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E3D018769BCF0F853541425 /* PredatorNode.swift */; };
 		CCD834485CBB7DABCD238092 /* pred_danger.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = FF4BB11194BF3697593CA984 /* pred_danger.mp3 */; };
+		CFC4E137E3768B4C779385A3 /* meteor_explosion.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = F9A533E01C9A2F3FE48C8385 /* meteor_explosion.mp3 */; };
 		D0B68DB41B3D3187DBCA82F8 /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BF7353000F7CDB2A9BF8554 /* GameViewController.swift */; };
 		D4EB45E04B62FD8F11FD9936 /* boid_safe.wav in Resources */ = {isa = PBXBuildFile; fileRef = 4E3A3CFD32B4AEF147BB9D38 /* boid_safe.wav */; };
 		DAD905732CE7EEEB8EFABAD0 /* gameover.wav in Resources */ = {isa = PBXBuildFile; fileRef = F22BCAEA99F28403DE27E012 /* gameover.wav */; };
 		E1AA0EB12A2EB72CA03B9173 /* extra_player.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 3A1A5F55EEC92E0CCCAEA951 /* extra_player.mp3 */; };
+		E3E9787C7A21D9B928B582DE /* GameVersion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AF198358A952B737A238D36 /* GameVersion.swift */; };
 		E452035B23C7A7C52D274A24 /* extra_player.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 3A1A5F55EEC92E0CCCAEA951 /* extra_player.mp3 */; };
 		EDD69A337C0EC4F84DD597E2 /* pred_lose.wav in Resources */ = {isa = PBXBuildFile; fileRef = BE397A4C03ACD5DD4DD51DE1 /* pred_lose.wav */; };
 		EECC5F1964104C7D4A4FC935 /* blackhole_appear.wav in Resources */ = {isa = PBXBuildFile; fileRef = FA6F4089F2A8933B8A9B7046 /* blackhole_appear.wav */; };
@@ -69,6 +75,7 @@
 		43B85B643F01E19D07D9850E /* Math.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Math.swift; sourceTree = "<group>"; };
 		44D4CB49DD0541B0AE01C0C5 /* background_intro.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = background_intro.wav; sourceTree = "<group>"; };
 		4E3A3CFD32B4AEF147BB9D38 /* boid_safe.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = boid_safe.wav; sourceTree = "<group>"; };
+		4E866ED6E66F08483ADE8244 /* meteor_inbound.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = meteor_inbound.wav; sourceTree = "<group>"; };
 		57EED99C04447DBF0062D150 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		589088FFBC8419E10CDCB9B2 /* background_gameplay.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = background_gameplay.wav; sourceTree = "<group>"; };
 		58FF5D664A8AAA4803C0B563 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
@@ -76,6 +83,7 @@
 		5BF7353000F7CDB2A9BF8554 /* GameViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewController.swift; sourceTree = "<group>"; };
 		62947E319451C1BB41154DE1 /* boid_safe4.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = boid_safe4.mp3; sourceTree = "<group>"; };
 		65AAD04519AF531D5DA8E94F /* ScoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreManager.swift; sourceTree = "<group>"; };
+		6AF198358A952B737A238D36 /* GameVersion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameVersion.swift; sourceTree = "<group>"; };
 		6F33AB7AD1A06A49E82E57AE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7B6D32C0514A65313B8FE78A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7E3D018769BCF0F853541425 /* PredatorNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredatorNode.swift; sourceTree = "<group>"; };
@@ -88,6 +96,7 @@
 		E57DFA5423792AC06A5920D5 /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
 		EDD1384235E6750BEC9B7A6D /* Particle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = Particle.icns; sourceTree = "<group>"; };
 		F22BCAEA99F28403DE27E012 /* gameover.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = gameover.wav; sourceTree = "<group>"; };
+		F9A533E01C9A2F3FE48C8385 /* meteor_explosion.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = meteor_explosion.mp3; sourceTree = "<group>"; };
 		FA6F4089F2A8933B8A9B7046 /* blackhole_appear.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = blackhole_appear.wav; sourceTree = "<group>"; };
 		FAB7DF8EF8E4EBB7FE4C7CEC /* SafeZoneNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafeZoneNode.swift; sourceTree = "<group>"; };
 		FF2A06854BEF16311D22ECA6 /* boid_dead.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = boid_dead.wav; sourceTree = "<group>"; };
@@ -119,6 +128,7 @@
 				9B587CF9F1B572D6EF16FE6A /* BlackHoleNode.swift */,
 				D024CFEA46E5A860CF622504 /* BoidNode.swift */,
 				320A36F61F756CD4806BCEE5 /* GameScene.swift */,
+				6AF198358A952B737A238D36 /* GameVersion.swift */,
 				43B85B643F01E19D07D9850E /* Math.swift */,
 				328F25F26F67F657268F0824 /* PlatformColor.swift */,
 				7E3D018769BCF0F853541425 /* PredatorNode.swift */,
@@ -186,6 +196,8 @@
 				62947E319451C1BB41154DE1 /* boid_safe4.mp3 */,
 				3A1A5F55EEC92E0CCCAEA951 /* extra_player.mp3 */,
 				F22BCAEA99F28403DE27E012 /* gameover.wav */,
+				F9A533E01C9A2F3FE48C8385 /* meteor_explosion.mp3 */,
+				4E866ED6E66F08483ADE8244 /* meteor_inbound.wav */,
 				FF4BB11194BF3697593CA984 /* pred_danger.mp3 */,
 				BE397A4C03ACD5DD4DD51DE1 /* pred_lose.wav */,
 			);
@@ -283,6 +295,8 @@
 				457BA86DD06791BFC547C116 /* boid_safe4.mp3 in Resources */,
 				E1AA0EB12A2EB72CA03B9173 /* extra_player.mp3 in Resources */,
 				DAD905732CE7EEEB8EFABAD0 /* gameover.wav in Resources */,
+				CFC4E137E3768B4C779385A3 /* meteor_explosion.mp3 in Resources */,
+				66AE8DF222BBD26CA514BE43 /* meteor_inbound.wav in Resources */,
 				122B3912BCCF7C9F9A6CDA40 /* pred_danger.mp3 in Resources */,
 				EDD69A337C0EC4F84DD597E2 /* pred_lose.wav in Resources */,
 				45F73E274F922525C7780F65 /* title.png in Resources */,
@@ -304,6 +318,8 @@
 				3F5BA5C62742C69805C63525 /* boid_safe4.mp3 in Resources */,
 				E452035B23C7A7C52D274A24 /* extra_player.mp3 in Resources */,
 				19E2255BF6A1DA834A09267C /* gameover.wav in Resources */,
+				9A723972244522C58B2AD1E1 /* meteor_explosion.mp3 in Resources */,
+				39E8470DE741627BD3A3DFBF /* meteor_inbound.wav in Resources */,
 				CCD834485CBB7DABCD238092 /* pred_danger.mp3 in Resources */,
 				354B331953812A82740F010C /* pred_lose.wav in Resources */,
 				149FE80F5FBFDE26CCBBB076 /* title.png in Resources */,
@@ -322,6 +338,7 @@
 				F3FC74E4D8AF76FCA882E7F7 /* BlackHoleNode.swift in Sources */,
 				3791B1B9173F4CA76154DB4D /* BoidNode.swift in Sources */,
 				5CF121C27B3AE24BB8198E09 /* GameScene.swift in Sources */,
+				E3E9787C7A21D9B928B582DE /* GameVersion.swift in Sources */,
 				826D287CA2B397A08F14BDC1 /* Math.swift in Sources */,
 				23FAB55B5B9234AFEBE3DDD8 /* PlatformColor.swift in Sources */,
 				4EDB36CE145DD18F8C50CF0E /* PredatorNode.swift in Sources */,
@@ -340,6 +357,7 @@
 				8734ED912B03B339AAC72741 /* BlackHoleNode.swift in Sources */,
 				35E00C1AD931F9E98D791BA7 /* BoidNode.swift in Sources */,
 				A8877FCF206B93773A499F0E /* GameScene.swift in Sources */,
+				A41EDC096E6EEF3B3AD5B3CF /* GameVersion.swift in Sources */,
 				D0B68DB41B3D3187DBCA82F8 /* GameViewController.swift in Sources */,
 				4A683C2F517C4654016103B4 /* Math.swift in Sources */,
 				55AC1E0B690D6A949F0D4722 /* PlatformColor.swift in Sources */,
