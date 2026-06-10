@@ -1,7 +1,14 @@
 # Particle — Feature Ideas
 
 ## Hazards
-- **Black holes / gravity wells** — pull boids in and destroy them; player has to fight the gravity
+- **Black holes / gravity wells** — pull boids in and destroy them; player has to fight the gravity ✅
+- **Neon meteor strike** — wave 3+, 30% chance per wave (tunable in Config); targets the safe zone
+  with the most boids (even if it's the only zone); no life lost, no score penalty — ejected boids
+  return to wandering and can be re-herded for bonus points; boids ejected with large outward velocity
+  burst; destroyed zone replaced by a new one spawning ~3s later, randomly placed away from predators;
+  does NOT affect predators or black holes; warning = incoming sound + visible streak only (no UI text,
+  no zone flash); visual: fast orange/white-hot neon streak with particle trail + ring shockwave on
+  impact; need two sounds: incoming whoosh + impact hit
 - **Electric fences / laser grids** — appear mid-wave; boids die if they cross
 - **Corrupted boid** — infects neighbors it touches, turning them hostile until cured
 

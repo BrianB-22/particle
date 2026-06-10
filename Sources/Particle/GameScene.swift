@@ -29,7 +29,17 @@ private enum Config {
     static let wWander: CGFloat = 0.18
 
     // Feature flags
-    static let boidTrails: Bool = true
+    static let boidTrails:   Bool = true
+    static let devDebugMode: Bool = true   // set false before release
+
+    // Meteor strike
+    struct Meteor {
+        static let minWave:      Int     = 3
+        static let chance:       Double  = 0.30
+        static let replaceDelay: Double  = 3.0
+        static let speed:        CGFloat = 700
+        static let ejectSpeed:   CGFloat = 220
+    }
 
     // Predator aggressiveness — 5 levels, mapped per wave range below
     struct PredatorAggression {
@@ -86,11 +96,18 @@ final class GameScene: SKScene {
     private var score             = 0
     private var lives             = 3
     private var wave              = 1
-    private var nextLifeThreshold = 10000  // bonus life every 10k points
-    private var waveCompleteGuard      = false
-    private var timerFired             = false
+    private var nextLifeThreshold = 5000  // bonus life every 5k points
+    private var waveCompleteGuard         = false
+    private var timerFired                = false
     private var blackHoleSpawnedThisWave  = false
-    private var blackHoleRolledThisWave   = false  // 50% chance roll result for this wave
+    private var blackHoleRolledThisWave   = false
+
+    // Meteor strike state
+    private var meteorFiredThisWave = false
+    private var meteorNode:     SKShapeNode? = nil
+    private var meteorTarget:   SafeZoneNode? = nil
+    private var meteorVelocity: CGVector = .zero
+    private var meteorTrailTimer: CGFloat = 0
 
     // MARK: Timer
     private var waveTimeRemaining: Double = 0
@@ -472,6 +489,8 @@ final class GameScene: SKScene {
         phase = .playing
         AudioManager.shared.stopBackground()
         AudioManager.shared.startGameplay()
+        meteorFiredThisWave = false
+        rollMeteor()
     }
 
     // MARK: - Wave scaling helpers
@@ -826,7 +845,7 @@ final class GameScene: SKScene {
     private func checkExtraLife() {
         guard phase == .playing, score >= nextLifeThreshold, lives < 6 else { return }
         lives += 1
-        nextLifeThreshold += 10000
+        nextLifeThreshold += 5000
         AudioManager.shared.play("extra_player")
         refreshHUD()
 
@@ -921,6 +940,7 @@ final class GameScene: SKScene {
 
         predators.forEach { updatePredator($0, dt: dt) }
         blackHoles.forEach  { updateBlackHole($0, dt: dt) }
+        updateMeteor(dt: dt)
         boids.forEach { b in
             guard b.state != .dying else { return }
             updateBoid(b, dt: dt)
@@ -1322,6 +1342,237 @@ final class GameScene: SKScene {
         spawnPredators(wavePredatorCount())
         resetTimer()
         refreshHUD()
+
+        // Cancel any in-flight meteor and roll for this wave
+        removeAction(forKey: "meteorDelay")
+        meteorNode?.removeFromParent(); meteorNode = nil; meteorTarget = nil
+        meteorFiredThisWave = false
+        rollMeteor()
+    }
+
+    // MARK: - Meteor strike
+
+    private func rollMeteor() {
+        guard wave >= Config.Meteor.minWave, !meteorFiredThisWave else { return }
+        guard Double.random(in: 0...1) < Config.Meteor.chance else { return }
+        let delay = Double.random(in: 6...18)
+        run(.sequence([
+            .wait(forDuration: delay),
+            .run { [weak self] in
+                guard let self, self.phase == .playing else { return }
+                self.launchMeteorAtBestZone()
+            }
+        ]), withKey: "meteorDelay")
+    }
+
+    private func forceMeteor() {
+        removeAction(forKey: "meteorDelay")
+        launchMeteorAtBestZone()
+    }
+
+    private func launchMeteorAtBestZone() {
+        guard meteorNode == nil else { return }
+        // Target zone with most boids (even if empty — per design)
+        guard let target = safeZones.max(by: { $0.occupancy < $1.occupancy }) else { return }
+        launchMeteor(at: target)
+    }
+
+    private func launchMeteor(at target: SafeZoneNode) {
+        meteorFiredThisWave = true
+        meteorTarget = target
+
+        // Sound fires before the meteor is visible
+        AudioManager.shared.play("meteor_inbound")
+
+        run(.sequence([
+            .wait(forDuration: 0.55),
+            .run { [weak self] in
+                guard let self, let tgt = self.meteorTarget else { return }
+                let start = self.randomEdgePoint()
+                let head = SKShapeNode(circleOfRadius: 12)
+                head.fillColor   = PlatformColor(red: 1.0, green: 0.65, blue: 0.10, alpha: 1)
+                head.strokeColor = PlatformColor(red: 1.0, green: 0.90, blue: 0.55, alpha: 1)
+                head.lineWidth   = 2
+                head.glowWidth   = 20
+                head.position    = start
+                head.zPosition   = 25
+                self.addChild(head)
+                self.meteorNode = head
+                let diff = CGVector(dx: tgt.position.x - start.x, dy: tgt.position.y - start.y)
+                self.meteorVelocity = diff.normalized() * Config.Meteor.speed
+            }
+        ]))
+    }
+
+    private func updateMeteor(dt: CGFloat) {
+        guard let meteor = meteorNode, let target = meteorTarget else { return }
+
+        meteor.position = meteor.position + meteorVelocity * dt
+
+        // Burning sparkle trail — two layers at different intervals
+        meteorTrailTimer += dt
+        if meteorTrailTimer >= 0.012 {
+            meteorTrailTimer = 0
+
+            // Hot white/orange core ember
+            let ember = SKShapeNode(circleOfRadius: CGFloat.random(in: 1.5...3.5))
+            ember.fillColor   = Bool.random()
+                ? PlatformColor(red: 1.0, green: 0.95, blue: 0.70, alpha: 1.0)   // white-hot
+                : PlatformColor(red: 1.0, green: 0.55, blue: 0.05, alpha: 0.95)  // deep orange
+            ember.strokeColor = .clear
+            ember.glowWidth   = 6
+            // Slight perpendicular scatter so trail has width
+            let perp = CGVector(dx: -meteorVelocity.dy, dy: meteorVelocity.dx).normalized()
+            let scatter = CGFloat.random(in: -5...5)
+            ember.position  = CGPoint(x: meteor.position.x + perp.dx * scatter,
+                                      y: meteor.position.y + perp.dy * scatter)
+            ember.zPosition = 24
+            addChild(ember)
+            ember.run(.sequence([
+                .group([.scale(to: 0.05, duration: 0.22), .fadeOut(withDuration: 0.22)]),
+                .removeFromParent()
+            ]))
+
+            // Occasional larger glow blob for the burn haze
+            if Int.random(in: 0...3) == 0 {
+                let blob = SKShapeNode(circleOfRadius: CGFloat.random(in: 5...9))
+                blob.fillColor   = PlatformColor(red: 1.0, green: 0.45, blue: 0.05, alpha: 0.35)
+                blob.strokeColor = .clear
+                blob.glowWidth   = 12
+                blob.position    = meteor.position
+                blob.zPosition   = 23
+                addChild(blob)
+                blob.run(.sequence([
+                    .group([.scale(to: 1.6, duration: 0.28), .fadeOut(withDuration: 0.28)]),
+                    .removeFromParent()
+                ]))
+            }
+        }
+
+        if meteor.position.distance(to: target.position) < 25 {
+            triggerMeteorImpact()
+        }
+    }
+
+    private func triggerMeteorImpact() {
+        guard let meteor = meteorNode, let target = meteorTarget else { return }
+        let impactPos = target.position
+
+        meteor.removeFromParent()
+        meteorNode = nil
+        meteorTarget = nil
+
+        AudioManager.shared.play("meteor_explosion")
+
+        // Small hot flash at the core
+        let flash = SKShapeNode(circleOfRadius: 18)
+        flash.fillColor   = PlatformColor(red: 1.0, green: 0.90, blue: 0.60, alpha: 0.95)
+        flash.strokeColor = .clear
+        flash.glowWidth   = 18
+        flash.position    = impactPos
+        flash.zPosition   = 32
+        addChild(flash)
+        flash.run(.sequence([
+            .group([.scale(to: 2.2, duration: 0.15), .fadeOut(withDuration: 0.15)]),
+            .removeFromParent()
+        ]))
+
+        // Two compact neon rings
+        let neonRings: [(PlatformColor, CGFloat, Double)] = [
+            (PlatformColor(red: 0.00, green: 0.96, blue: 1.00, alpha: 1), target.radius * 1.6 / 8, 0.45),
+            (PlatformColor(red: 1.00, green: 0.18, blue: 0.47, alpha: 1), target.radius * 1.0 / 8, 0.30),
+        ]
+        for (color, scale, dur) in neonRings {
+            let r = SKShapeNode(circleOfRadius: 8)
+            r.fillColor   = .clear
+            r.strokeColor = color
+            r.lineWidth   = 2.5
+            r.glowWidth   = 8
+            r.position    = impactPos
+            r.zPosition   = 31
+            addChild(r)
+            r.run(.sequence([
+                .group([.scale(to: scale, duration: dur), .fadeOut(withDuration: dur)]),
+                .removeFromParent()
+            ]))
+        }
+
+        // Small neon sparkles — short range, tight cluster
+        let sparkColors: [PlatformColor] = [
+            PlatformColor(red: 0.00, green: 0.96, blue: 1.00, alpha: 1),
+            PlatformColor(red: 1.00, green: 0.18, blue: 0.47, alpha: 1),
+            PlatformColor(red: 0.22, green: 1.00, blue: 0.08, alpha: 1),
+            PlatformColor(red: 0.70, green: 0.27, blue: 1.00, alpha: 1),
+            PlatformColor(red: 1.00, green: 0.90, blue: 0.40, alpha: 1),
+        ]
+        for _ in 0..<14 {
+            let spark = SKShapeNode(circleOfRadius: CGFloat.random(in: 1.5...3.0))
+            spark.fillColor   = sparkColors.randomElement()!
+            spark.strokeColor = .clear
+            spark.glowWidth   = 6
+            spark.position    = impactPos
+            spark.zPosition   = 31
+            addChild(spark)
+            let angle = CGFloat.random(in: 0...(2 * .pi))
+            let dist  = CGFloat.random(in: 15...65)
+            let dest  = CGPoint(x: impactPos.x + cos(angle) * dist, y: impactPos.y + sin(angle) * dist)
+            let dur   = Double.random(in: 0.25...0.50)
+            spark.run(.sequence([
+                .group([.move(to: dest, duration: dur), .fadeOut(withDuration: dur), .scale(to: 0.1, duration: dur)]),
+                .removeFromParent()
+            ]))
+        }
+
+        // Eject boids with outward velocity burst
+        for boid in boids where boid.state == .safe {
+            guard boid.position.distance(to: impactPos) < target.radius + 30 else { continue }
+            boid.state = .wandering
+            boid.applyStateAppearance()
+            let dir: CGVector = boid.position.distance(to: impactPos) > 1
+                ? (boid.position - impactPos).normalized()
+                : CGVector(dx: CGFloat.random(in: -1...1), dy: CGFloat.random(in: -1...1)).normalized()
+            boid.velocity = dir * CGFloat.random(in: Config.Meteor.ejectSpeed...(Config.Meteor.ejectSpeed * 1.4))
+        }
+
+        // Remove the struck zone
+        if let idx = safeZones.firstIndex(of: target) { safeZones.remove(at: idx) }
+        target.removeFromParent()
+        refreshBoidCount()
+
+        // Spawn replacement zone after delay
+        run(.sequence([
+            .wait(forDuration: Config.Meteor.replaceDelay),
+            .run { [weak self] in self?.spawnMeteorReplacementZone() }
+        ]))
+    }
+
+    private func spawnMeteorReplacementZone() {
+        guard phase == .playing else { return }
+        let r   = safeZoneRadius()
+        let cap = wave > 3 ? Config.boidCount / max(safeZones.count + 1, 1) : Int.max
+        let zone = cap == Int.max ? SafeZoneNode(radius: r) : SafeZoneNode(radius: r, capacity: cap)
+
+        // Place away from predators
+        let margin: CGFloat = r + 60
+        let minPredDist: CGFloat = 160
+        var pos = CGPoint(x: size.width / 2, y: size.height / 2)
+        for _ in 0..<30 {
+            let candidate = CGPoint(
+                x: CGFloat.random(in: margin...(size.width  - margin)),
+                y: CGFloat.random(in: margin...(size.height - margin))
+            )
+            if !predators.contains(where: { $0.position.distance(to: candidate) < minPredDist }) {
+                pos = candidate; break
+            }
+        }
+
+        zone.position = pos
+        zone.alpha    = 0
+        zone.setScale(0.1)
+        zone.run(.group([.scale(to: 1.0, duration: 0.5), .fadeIn(withDuration: 0.5)]))
+        safeZones.append(zone)
+        addChild(zone)
+        refreshBoidCount()
     }
 
     // MARK: - Kill handlers
@@ -1609,9 +1860,10 @@ final class GameScene: SKScene {
     private func restart() {
         removeAllChildren(); removeAllActions()
         boids.removeAll(); predators.removeAll(); safeZones.removeAll(); blackHoles.removeAll()
-        score = 0; lives = 3; wave = 1; lastTime = nil; nextLifeThreshold = 10000
+        score = 0; lives = 3; wave = 1; lastTime = nil; nextLifeThreshold = 5000
         waveCompleteGuard = false; timerFired = false
         blackHoleSpawnedThisWave = false; blackHoleRolledThisWave = false
+        meteorFiredThisWave = false; meteorNode = nil; meteorTarget = nil
         backgroundColor = PlatformColor(red: 0.04, green: 0.00, blue: 0.07, alpha: 1)
         drawGrid()
         spawnNebulas()
@@ -1715,14 +1967,14 @@ final class GameScene: SKScene {
             }
             return
         }
-        #if DEBUG
-        guard let ch = event.characters else { return }
-        switch ch {
-        case "w": debugWinWave()
-        case "k": if let b = boids.first(where: { $0.state == .wandering }) { devour(b) }
-        default:  break
+        if Config.devDebugMode, phase == .playing, let ch = event.characters {
+            switch ch {
+            case "w": debugWinWave()
+            case "k": if let b = boids.first(where: { $0.state == .wandering }) { devour(b) }
+            case "m": forceMeteor()
+            default:  break
+            }
         }
-        #endif
     }
     #endif
 
