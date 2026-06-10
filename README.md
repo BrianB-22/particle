@@ -111,3 +111,13 @@ Clear waves quickly — the time bonus adds up fast.
 |---|---|
 | macOS | In development |
 | iPadOS | In development |
+
+---
+
+## Feedback
+
+This is a very early beta build. If you're playing it, I'd love to hear what you think — what felt fun, what was frustrating, how far you got, and anything that felt broken.
+
+**[Leave feedback here →](https://tally.so/r/ODEWrM)**
+
+There's also a feedback button on the end screen in-game.
