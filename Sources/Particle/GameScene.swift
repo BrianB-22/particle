@@ -96,7 +96,7 @@ final class GameScene: SKScene {
     private var score             = 0
     private var lives             = 3
     private var wave              = 1
-    private var nextLifeThreshold = 5000  // bonus life every 5k points
+    private var nextLifeThreshold = 4000  // bonus life every 4k points
     private var waveCompleteGuard         = false
     private var timerFired                = false
     private var blackHoleSpawnedThisWave  = false
@@ -122,10 +122,12 @@ final class GameScene: SKScene {
 
     private var lastTime: TimeInterval?
     private var lastKnownSize: CGSize = .zero
+    private var sizeScale: CGFloat = 1.0   // size.width / 1180 reference — keeps speeds screen-relative
 
     // MARK: - Lifecycle
 
     override func didMove(to view: SKView) {
+        sizeScale = max(0.5, size.width / 1180)
         backgroundColor = PlatformColor(red: 0.04, green: 0.00, blue: 0.07, alpha: 1)
         drawGrid()
         spawnNebulas()
@@ -134,6 +136,7 @@ final class GameScene: SKScene {
     }
 
     private func adaptToCurrentSize() {
+        sizeScale = max(0.5, size.width / 1180)
         enumerateChildNodes(withName: "grid") { node, _ in node.removeFromParent() }
         drawGrid()
         enumerateChildNodes(withName: "nebula") { node, _ in node.removeFromParent() }
@@ -207,14 +210,6 @@ final class GameScene: SKScene {
             .fadeAlpha(to: 1.00, duration: 1.2)
         ])))
 
-        // Controls hint
-        let ctrl = SKLabelNode(text: "hover to attract   right-click to repel")
-        ctrl.fontName  = "Courier"
-        ctrl.fontSize  = 13
-        ctrl.fontColor = PlatformColor(red: 0.22, green: 1.00, blue: 0.08, alpha: 0.60)
-        ctrl.position  = CGPoint(x: size.width/2, y: size.height/2 - 16)
-        ctrl.horizontalAlignmentMode = .center
-        panel.addChild(ctrl)
 
         // Start button
         let btnBg = SKShapeNode(rectOf: CGSize(width: 220, height: 48), cornerRadius: 6)
@@ -222,7 +217,8 @@ final class GameScene: SKScene {
         btnBg.strokeColor = PlatformColor(red: 0.70, green: 0.27, blue: 1.00, alpha: 0.85)
         btnBg.lineWidth   = 2
         btnBg.glowWidth   = 8
-        btnBg.position    = CGPoint(x: size.width/2, y: size.height/2 - 78)
+        let btnOffset = size.height * 0.12   // ~98pt windowed, ~118pt fullscreen
+        btnBg.position    = CGPoint(x: size.width/2, y: size.height/2 - btnOffset)
         panel.addChild(btnBg)
         btnBg.run(.repeatForever(.sequence([
             .fadeAlpha(to: 0.45, duration: 0.6),
@@ -276,6 +272,28 @@ final class GameScene: SKScene {
         fsBacking.addChild(fsBtn)
         #endif
 
+        // Demo badge — above title logo, floating + color flash
+        let demo = SKLabelNode(text: "✦  DEMO BUILD  •  FEEDBACK WANTED  ✦")
+        demo.fontName               = "Courier-Bold"
+        demo.fontSize               = 16
+        demo.fontColor              = PlatformColor(red: 0, green: 0.96, blue: 1, alpha: 1)
+        demo.horizontalAlignmentMode = .center
+        demo.zPosition              = 41
+        demo.position               = CGPoint(x: size.width / 2, y: size.height / 2 + size.height * 0.20)
+        demo.run(.repeatForever(.sequence([
+            .group([
+                .sequence([
+                    .moveBy(x: 0, y: 6, duration: 1.1),
+                    .moveBy(x: 0, y: -6, duration: 1.1)
+                ]),
+                .sequence([
+                    .colorize(with: PlatformColor(red: 1, green: 0.18, blue: 0.87, alpha: 1), colorBlendFactor: 1, duration: 1.1),
+                    .colorize(with: PlatformColor(red: 0, green: 0.96, blue: 1, alpha: 1), colorBlendFactor: 1, duration: 1.1)
+                ])
+            ])
+        ])))
+        panel.addChild(demo)
+
         // Version — upper-right corner
         let verLbl = SKLabelNode(text: "v\(gameVersion)")
         verLbl.fontName                = "Courier"
@@ -296,8 +314,8 @@ final class GameScene: SKScene {
         panel.zPosition = 60
         addChild(panel)
 
-        let cardW: CGFloat = 560
-        let cardH: CGFloat = 420
+        let cardW: CGFloat = 600
+        let cardH: CGFloat = 520
         let cx = size.width / 2
         let cy = size.height / 2
 
@@ -310,13 +328,15 @@ final class GameScene: SKScene {
         card.position    = CGPoint(x: cx, y: cy)
         panel.addChild(card)
 
+        let left = cx - cardW/2 + 36
+
         func heading(_ text: String, y: CGFloat) {
             let lbl = SKLabelNode(text: text)
             lbl.fontName             = "Courier-Bold"
             lbl.fontSize             = 13
             lbl.fontColor            = PlatformColor(red: 0.00, green: 0.96, blue: 1.00, alpha: 1)
             lbl.horizontalAlignmentMode = .left
-            lbl.position             = CGPoint(x: cx - cardW/2 + 36, y: cy + y)
+            lbl.position             = CGPoint(x: left, y: cy + y)
             panel.addChild(lbl)
         }
 
@@ -326,7 +346,7 @@ final class GameScene: SKScene {
             lbl.fontSize             = 12
             lbl.fontColor            = PlatformColor(white: 0.85, alpha: 1)
             lbl.horizontalAlignmentMode = .left
-            lbl.position             = CGPoint(x: cx - cardW/2 + 36, y: cy + y)
+            lbl.position             = CGPoint(x: left, y: cy + y)
             panel.addChild(lbl)
         }
 
@@ -336,41 +356,57 @@ final class GameScene: SKScene {
         title.fontSize               = 22
         title.fontColor              = PlatformColor(red: 1.00, green: 0.18, blue: 0.47, alpha: 1)
         title.horizontalAlignmentMode = .center
-        title.position               = CGPoint(x: cx, y: cy + 172)
+        title.position               = CGPoint(x: cx, y: cy + 222)
         panel.addChild(title)
 
-        heading("GOAL",     y:  140)
-        row("Guide all boids into the glowing safe zones before",  y: 118)
-        row("the timer runs out. Lose a life each time a boid",    y: 102)
-        row("is caught by a predator or swallowed by a black hole.",y:  86)
+        heading("GOAL", y: 192)
+        row("Guide boids into glowing safe zones before the timer",   y: 172)
+        row("runs out. Lose a life when a boid is caught by a",       y: 157)
+        row("predator, swallowed by a black hole, or hit by a meteor.",y: 142)
 
-        heading("CONTROLS", y: 58)
+        heading("CONTROLS", y: 114)
         #if os(macOS)
-        row("Move mouse       Attract nearby boids",   y: 36)
-        row("Right-click      Repel nearby boids",     y: 20)
+        row("Move mouse       Attract nearby boids toward cursor",  y:  94)
+        row("Right-click      Repel boids — scatter predators too", y:  79)
+        row("F                Toggle fullscreen (title screen only)",y:  64)
+        row("ESC              Quit",                                 y:  49)
         #else
-        row("Drag             Attract nearby boids",   y: 36)
-        row("Two-finger drag  Repel nearby boids",     y: 20)
+        row("Drag             Attract nearby boids",   y: 94)
+        row("Two-finger drag  Repel nearby boids",     y: 79)
         #endif
 
-        heading("BOID TYPES", y: -8)
-        row("Small (skittish)   Fast, flee predators early, hard to herd", y: -30)
-        row("Normal             Balanced flocking behaviour",               y: -46)
-        row("Large (stubborn)   Slow, ignores the flock, wanders alone",    y: -62)
+        heading("BOID TYPES", y: 22)
+        row("Small (skittish)   Fast, flee predators early, hard to herd", y:   2)
+        row("Normal             Balanced flocking behaviour",               y: -13)
+        row("Large (stubborn)   Slow, ignores the flock, wanders alone",    y: -28)
 
-        heading("HAZARDS", y: -90)
-        row("Predators      Hunt boids — ghost blue at wave start,",  y: -112)
-        row("               activate after a grace period.",          y: -128)
-        row("Black holes    Appear wave 5+, gravity pulls boids in.", y: -144)
+        heading("HAZARDS", y: -55)
+        row("Predators    Ghost blue at wave start, activate after grace period.", y:  -75)
+        row("             More waves = more predators, faster and smarter.",       y:  -90)
+        row("Black holes  Wave 3+  —  gravity pulls boids in and destroys them.",  y: -105)
+        row("Meteor       Wave 3+  —  targets your busiest safe zone. Boids",      y: -120)
+        row("             scatter and can be re-herded. Zone respawns in 3s.",      y: -135)
 
-        heading("SCORING", y: -172)
-        row("+5 per boid saved    +2 per second remaining at wave end", y: -194)
+        heading("SCORING", y: -160)
+        row("+10 per boid saved                        ",                        y: -180)
+        row("+10 per second remaining at wave end",                               y: -195)
+        row("Extra life every 4,000 points  (max 6 lives)",                       y: -210)
+
+        // GitHub readme link
+        let readme = SKLabelNode(text: "github.com/BrianB-22/particle  —  full readme & tips")
+        readme.fontName               = "Courier"
+        readme.fontSize               = 11
+        readme.fontColor              = PlatformColor(red: 0.70, green: 0.27, blue: 1.00, alpha: 0.85)
+        readme.horizontalAlignmentMode = .center
+        readme.position               = CGPoint(x: cx, y: cy - cardH/2 + 38)
+        readme.name                   = "readmeLink"
+        panel.addChild(readme)
 
         // Dismiss hint
         let dismiss = SKLabelNode(text: "CLICK ANYWHERE TO CLOSE")
         dismiss.fontName               = "Courier"
         dismiss.fontSize               = 11
-        dismiss.fontColor              = PlatformColor(white: 0.45, alpha: 1)
+        dismiss.fontColor              = PlatformColor(white: 0.35, alpha: 1)
         dismiss.horizontalAlignmentMode = .center
         dismiss.position               = CGPoint(x: cx, y: cy - cardH/2 + 18)
         panel.addChild(dismiss)
@@ -495,28 +531,34 @@ final class GameScene: SKScene {
     // MARK: - Wave scaling helpers
 
     private func waveBoidMaxSpeed() -> CGFloat {
+        let base: CGFloat
         switch wave {
-        case 1:  return Config.baseBoidSpeed        // 55 — floaty intro
-        case 2:  return 95                          // big jump
-        default: return min(95 + CGFloat(wave - 2) * 16, 320)
+        case 1:  base = Config.baseBoidSpeed        // 55 — floaty intro
+        case 2:  base = 95                          // big jump
+        default: base = min(95 + CGFloat(wave - 2) * 16, 320)
         // wave 5≈143  wave 7≈175  wave 10≈223  wave 15≈303
         }
+        return base * sizeScale
     }
     private func wavePredatorMaxSpeed() -> CGFloat {
+        let base: CGFloat
         switch wave {
-        case 1:  return 75                          // faster than boid max (55) so they can hunt
-        case 2:  return 120                         // faster than boid max (95)
-        default: return min(120 + CGFloat(wave - 2) * 20, 440)
+        case 1:  base = 75                          // faster than boid max (55) so they can hunt
+        case 2:  base = 120                         // faster than boid max (95)
+        default: base = min(120 + CGFloat(wave - 2) * 20, 440)
         // wave 5≈180  wave 7≈220  wave 10≈280  wave 15≈380  (always > boid max)
         }
+        return base * sizeScale
     }
     private func wavePredatorCount()     -> Int     { 1 + (wave - 1) / 3 }
     private func waveEjectSpeed()        -> CGFloat {
+        let base: CGFloat
         switch wave {
-        case 1:  return 80
-        case 2:  return 140
-        default: return min(140 + CGFloat(wave - 2) * 12, 260)
+        case 1:  base = 80
+        case 2:  base = 140
+        default: base = min(140 + CGFloat(wave - 2) * 12, 260)
         }
+        return base * sizeScale
     }
     private func waveDuration()          -> Double  { max(90.0 - Double(wave - 1) * 3.0, 40.0) }
     private func safeZoneRadius()        -> CGFloat {
@@ -844,7 +886,7 @@ final class GameScene: SKScene {
     private func checkExtraLife() {
         guard phase == .playing, score >= nextLifeThreshold, lives < 6 else { return }
         lives += 1
-        nextLifeThreshold += 5000
+        nextLifeThreshold += 4000
         AudioManager.shared.play("extra_player")
         refreshHUD()
 
@@ -1107,7 +1149,7 @@ final class GameScene: SKScene {
         boid.state = threatened ? .threatened : .wandering
         // Minimum speed scales with wave — forces boids to actually use the higher caps
         let waveMax = waveBoidMaxSpeed() * p.speedScale
-        let waveMin: CGFloat = wave == 1 ? Config.minSpeed : waveMax * 0.42
+        let waveMin: CGFloat = wave == 1 ? Config.minSpeed * sizeScale : waveMax * 0.42
         boid.velocity = (boid.velocity + force).clamped(min: waveMin, max: waveMax)
         if Config.showBoidTrails { spawnTrail(at: boid.position, color: boid.neonColor) }
         boid.position = boid.position + boid.velocity * dt
@@ -1139,7 +1181,7 @@ final class GameScene: SKScene {
             let onScreen = pred.position.x >= 0 && pred.position.x <= size.width &&
                            pred.position.y >= 0 && pred.position.y <= size.height
             if onScreen {
-                pred.velocity = (pred.velocity * 0.98).limited(to: 30)
+                pred.velocity = (pred.velocity * 0.98).limited(to: 30 * sizeScale)
                 // Only count down once fully faded in
                 if pred.alpha >= 0.99 {
                     pred.ghostOnScreenTime += dt
@@ -1152,8 +1194,8 @@ final class GameScene: SKScene {
             } else {
                 // Steer toward screen center so the predator enters before activating
                 let toCenter = CGVector(dx: size.width / 2 - pred.position.x,
-                                        dy: size.height / 2 - pred.position.y).normalized() * 80
-                pred.velocity = (pred.velocity + toCenter * dt).limited(to: 60)
+                                        dy: size.height / 2 - pred.position.y).normalized() * (80 * sizeScale)
+                pred.velocity = (pred.velocity + toCenter * dt).limited(to: 60 * sizeScale)
             }
             pred.position = pred.position + pred.velocity * dt
             return
@@ -1179,7 +1221,7 @@ final class GameScene: SKScene {
         }) {
             let predicted = target.position + target.velocity * ag.predictTime
             let steer = (predicted - pred.position).normalized()
-            pred.velocity = (pred.velocity * ag.turnDamping + steer * ag.steerStrength + avoidForce).limited(to: topSpeed)
+            pred.velocity = (pred.velocity * ag.turnDamping + steer * ag.steerStrength * sizeScale + avoidForce).limited(to: topSpeed)
             pred.setHunting(pred.position.distance(to: target.position) < 80)
         } else {
             pred.velocity = (pred.velocity * ag.turnDamping + avoidForce).limited(to: topSpeed)
@@ -1398,7 +1440,7 @@ final class GameScene: SKScene {
                 self.addChild(head)
                 self.meteorNode = head
                 let diff = CGVector(dx: tgt.position.x - start.x, dy: tgt.position.y - start.y)
-                self.meteorVelocity = diff.normalized() * Config.Meteor.speed
+                self.meteorVelocity = diff.normalized() * (Config.Meteor.speed * self.sizeScale)
             }
         ]))
     }
@@ -1530,7 +1572,7 @@ final class GameScene: SKScene {
             let dir: CGVector = boid.position.distance(to: impactPos) > 1
                 ? (boid.position - impactPos).normalized()
                 : CGVector(dx: CGFloat.random(in: -1...1), dy: CGFloat.random(in: -1...1)).normalized()
-            boid.velocity = dir * CGFloat.random(in: Config.Meteor.ejectSpeed...(Config.Meteor.ejectSpeed * 1.4))
+            boid.velocity = dir * CGFloat.random(in: (Config.Meteor.ejectSpeed * sizeScale)...(Config.Meteor.ejectSpeed * sizeScale * 1.4))
         }
 
         // Remove the struck zone
@@ -1841,6 +1883,15 @@ final class GameScene: SKScene {
         tap.zPosition = 54
         tap.run(.repeatForever(.sequence([.fadeAlpha(to: 0.25, duration: 0.55), .fadeAlpha(to: 1, duration: 0.55)])))
         addChild(tap)
+
+        let feedback = SKLabelNode(text: "[ PROVIDE FEEDBACK ]")
+        feedback.fontName = "Courier"
+        feedback.fontSize = 13
+        feedback.fontColor = PlatformColor(red: 1, green: 0.65, blue: 0, alpha: 0.75)
+        feedback.position = CGPoint(x: cx, y: size.height / 2 - 228)
+        feedback.zPosition = 54
+        feedback.name = "feedbackBtn"
+        addChild(feedback)
     }
 
     @discardableResult
@@ -1859,7 +1910,7 @@ final class GameScene: SKScene {
     private func restart() {
         removeAllChildren(); removeAllActions()
         boids.removeAll(); predators.removeAll(); safeZones.removeAll(); blackHoles.removeAll()
-        score = 0; lives = 3; wave = 1; lastTime = nil; nextLifeThreshold = 5000
+        score = 0; lives = 3; wave = 1; lastTime = nil; nextLifeThreshold = 4000
         waveCompleteGuard = false; timerFired = false
         blackHoleSpawnedThisWave = false; blackHoleRolledThisWave = false
         meteorFiredThisWave = false; meteorNode = nil; meteorTarget = nil
@@ -1918,9 +1969,26 @@ final class GameScene: SKScene {
             }
             beginGame(); return
         case .help:
+            #if os(macOS)
+            if nodes(at: event.location(in: self)).contains(where: { $0.name == "readmeLink" }) {
+                if let url = URL(string: "https://github.com/BrianB-22/particle") {
+                    NSWorkspace.shared.open(url)
+                }
+                return
+            }
+            #endif
             childNode(withName: "helpPanel")?.run(.sequence([.fadeOut(withDuration: 0.15), .removeFromParent()]))
             phase = .title; return
-        case .scoreboard: restart();   return
+        case .scoreboard:
+            if nodes(at: event.location(in: self)).contains(where: { $0.name == "feedbackBtn" }) {
+                #if os(macOS)
+                if let url = URL(string: "https://tally.so/r/ODEWrM") {
+                    NSWorkspace.shared.open(url)
+                }
+                #endif
+                return
+            }
+            restart(); return
         default: break
         }
         input.position = event.location(in: self)

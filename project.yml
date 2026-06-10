@@ -30,6 +30,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: me.bernacki.particle
         PRODUCT_NAME: Particle
         INFOPLIST_FILE: Sources/macOS/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Sources/macOS/Particle.entitlements
         CODE_SIGN_STYLE: Automatic
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     scheme:

@@ -9,7 +9,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let size = CGSize(width: 1180, height: 820)
         window = NSWindow(
             contentRect: NSRect(origin: .zero, size: size),
-            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
         )
@@ -71,16 +71,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     func windowDidEnterFullScreen(_ notification: Notification) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self, let cv = self.window.contentView else { return }
-            self.skView.frame = cv.bounds
-        }
+        // autoresizingMask handles frame; lastKnownSize in update() catches the size change
     }
 
     func windowDidExitFullScreen(_ notification: Notification) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self, let cv = self.window.contentView else { return }
-            self.skView.frame = cv.bounds
-        }
+        // autoresizingMask handles frame; lastKnownSize in update() catches the size change
     }
 }

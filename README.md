@@ -85,9 +85,9 @@ From **wave 3** onward, there's a chance a neon meteor streaks across the screen
 
 | Event | Points |
 |---|---|
-| Boid safely in zone | +5 |
+| Boid safely in zone | +10 |
 | Time bonus (per second remaining) | +10 |
-| Extra life | Every 5,000 points (max 6 lives) |
+| Extra life | Every 4,000 points (max 6 lives) |
 
 Clear waves quickly — the time bonus adds up fast.
 
@@ -100,7 +100,7 @@ Clear waves quickly — the time bonus adds up fast.
 - **Watch the ghost predators.** Blue drifting predators will activate soon. In later waves the grace period is very short — don't ignore them.
 - **Position for the meteor.** When you hear the inbound sound, look for where it's headed. Move near that zone and you can scoop up the scattered boids the moment they burst free.
 - **Don't neglect stubborn boids.** They won't follow the flock. Hunt them down individually while the rest of the swarm handles itself.
-- **Time bonus is worth chasing.** A fast clear with 40 seconds remaining is worth +400 points — more than clearing an extra 80 boids.
+- **Time bonus is worth chasing.** A fast clear with 40 seconds remaining is worth +400 points — same as herding 40 extra boids.
 - **Safe zones shrink over time.** By the mid-waves, zones have capacity limits. Split your attention across multiple zones rather than trying to fill one completely before moving on.
 
 ---
