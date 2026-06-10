@@ -109,7 +109,7 @@ Clear waves quickly — the time bonus adds up fast.
 
 | Platform | Status |
 |---|---|
-| macOS | In development |
+| macOS | In early testing |
 | iPadOS | In development |
 
 ---
