@@ -109,5 +109,5 @@ Clear waves quickly — the time bonus adds up fast.
 
 | Platform | Status |
 |---|---|
-| macOS | Supported |
+| macOS | In development |
 | iPadOS | In development |
