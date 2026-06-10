@@ -110,6 +110,7 @@ final class GameScene: SKScene {
     override func didMove(to view: SKView) {
         backgroundColor = PlatformColor(red: 0.04, green: 0.00, blue: 0.07, alpha: 1)
         drawGrid()
+        spawnNebulas()
         showTitleScreen()
     }
 
@@ -483,6 +484,59 @@ final class GameScene: SKScene {
         addChild(grid)
     }
 
+    private func spawnNebulas() {
+        let palette: [(CGFloat, CGFloat, CGFloat)] = [
+            (0.00, 0.80, 1.00),  // cyan
+            (0.55, 0.10, 0.90),  // purple
+            (1.00, 0.18, 0.47),  // pink
+            (0.22, 1.00, 0.08),  // acid green
+        ]
+        for i in 0..<6 {
+            let color = palette[i % palette.count]
+            let radius = CGFloat.random(in: 100...180)
+
+            let effect = SKEffectNode()
+            effect.filter = CIFilter(name: "CIGaussianBlur", parameters: ["inputRadius": 60])
+            effect.shouldRasterize = true
+            effect.zPosition = -5
+            effect.position = CGPoint(
+                x: CGFloat.random(in: 160...(size.width  - 160)),
+                y: CGFloat.random(in: 160...(size.height - 160))
+            )
+            effect.name = "nebula"
+
+            let circle = SKShapeNode(circleOfRadius: radius)
+            circle.fillColor   = PlatformColor(red: color.0, green: color.1, blue: color.2, alpha: 1.0)
+            circle.strokeColor = .clear
+            effect.addChild(circle)
+
+            let speed: CGFloat = CGFloat.random(in: 14...24)
+            let angle = CGFloat.random(in: 0...(2 * .pi))
+            let vx = cos(angle) * speed
+            let vy = sin(angle) * speed
+            effect.userData = ["vx": vx, "vy": vy]
+
+            // Alpha pulse
+            let fadeMin = CGFloat.random(in: 0.04...0.06)
+            let fadeMax = CGFloat.random(in: 0.08...0.11)
+            let fadeDur = Double.random(in: 3.0...5.0)
+            effect.alpha = CGFloat.random(in: fadeMin...fadeMax)
+            effect.run(.repeatForever(.sequence([
+                .fadeAlpha(to: fadeMax, duration: fadeDur),
+                .fadeAlpha(to: fadeMin, duration: fadeDur)
+            ])))
+
+            // Scale breathe — offsets from fade so they feel independent
+            let scaleDur = Double.random(in: 4.0...8.0)
+            circle.run(.repeatForever(.sequence([
+                .scale(to: CGFloat.random(in: 1.15...1.35), duration: scaleDur),
+                .scale(to: CGFloat.random(in: 0.75...0.90), duration: scaleDur)
+            ])))
+
+            addChild(effect)
+        }
+    }
+
     // Radius scales with capacity: 1 zone = large, 2 = medium, 3 = small
     private func zoneRadius(capacity: Int, base: CGFloat) -> CGFloat {
         guard capacity != Int.max else { return base }
@@ -807,6 +861,17 @@ final class GameScene: SKScene {
         lastTime = currentTime
 
         tickTimer(dt: dt)
+
+        // Drift nebula clouds
+        enumerateChildNodes(withName: "nebula") { node, _ in
+            guard let vx = node.userData?["vx"] as? CGFloat,
+                  let vy = node.userData?["vy"] as? CGFloat else { return }
+            node.position.x += vx * dt
+            node.position.y += vy * dt
+            // Bounce off edges
+            if node.position.x < 0 || node.position.x > self.size.width  { node.userData?["vx"] = -vx }
+            if node.position.y < 0 || node.position.y > self.size.height { node.userData?["vy"] = -vy }
+        }
 
         predators.forEach { updatePredator($0, dt: dt) }
         blackHoles.forEach  { updateBlackHole($0, dt: dt) }
@@ -1502,6 +1567,7 @@ final class GameScene: SKScene {
         blackHoleSpawnedThisWave = false; blackHoleRolledThisWave = false
         backgroundColor = PlatformColor(red: 0.04, green: 0.00, blue: 0.07, alpha: 1)
         drawGrid()
+        spawnNebulas()
         showTitleScreen()   // back to title between runs
     }
 
