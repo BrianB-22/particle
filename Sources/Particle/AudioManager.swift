@@ -48,6 +48,8 @@ final class AudioManager {
             ("boid_safe",       "wav"),
             ("blackhole_appear", "wav"),
             ("pred_lose",       "wav"),
+            ("pred_danger",     "mp3"),
+            ("extra_player",    "mp3"),
             ("gameover",        "wav"),
         ]
         for (name, ext) in effects {

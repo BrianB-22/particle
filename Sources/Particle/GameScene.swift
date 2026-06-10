@@ -30,6 +30,33 @@ private enum Config {
 
     // Feature flags
     static let boidTrails: Bool = true
+
+    // Predator aggressiveness — 5 levels, mapped per wave range below
+    struct PredatorAggression {
+        let speedScale:    CGFloat  // multiplier on wavePredatorMaxSpeed()
+        let predictTime:   CGFloat  // seconds ahead to predict target position
+        let gracePeriod:   CGFloat  // on-screen seconds before activating
+        let steerStrength: CGFloat  // how hard they turn toward target each tick
+        let turnDamping:   CGFloat  // velocity damping (lower = snappier turns)
+
+        // steerStrength / (1 - turnDamping) = steady-state speed. All levels use same damping for consistent feel.
+        static let level1 = PredatorAggression(speedScale: 0.25, predictTime: 0.10, gracePeriod: 4.5, steerStrength: 0.7,  turnDamping: 0.930)  // SS ~10  — docile
+        static let level2 = PredatorAggression(speedScale: 0.38, predictTime: 0.20, gracePeriod: 3.0, steerStrength: 1.4,  turnDamping: 0.930)  // SS ~20  — easy
+        static let level3 = PredatorAggression(speedScale: 0.50, predictTime: 0.35, gracePeriod: 2.0, steerStrength: 2.1,  turnDamping: 0.930)  // SS ~30  — normal
+        static let level4 = PredatorAggression(speedScale: 0.62, predictTime: 0.45, gracePeriod: 1.0, steerStrength: 2.8,  turnDamping: 0.930)  // SS ~40  — hard
+        static let level5 = PredatorAggression(speedScale: 0.75, predictTime: 0.50, gracePeriod: 0.5, steerStrength: 3.5,  turnDamping: 0.930)  // SS ~50  — lethal
+
+        // ── Wave mapping — edit this to tune per-wave aggressiveness ──
+        static func forWave(_ wave: Int) -> PredatorAggression {
+            switch wave {
+            case 1...2:   return .level1
+            case 3...4:   return .level2
+            case 5...9:   return .level3
+            case 10...15: return .level4
+            default:      return .level5
+            }
+        }
+    }
 }
 
 // MARK: - GameScene
@@ -51,7 +78,7 @@ final class GameScene: SKScene {
     private var input = InputState()
 
     // MARK: Game state
-    private enum Phase { case title, playing, waveComplete, gameOver, enteringInitials, scoreboard }
+    private enum Phase { case title, help, playing, waveComplete, gameOver, enteringInitials, scoreboard }
     private var phase             = Phase.title
     private var initialsInput     = ""
     private var initialsLabel:    SKLabelNode?
@@ -59,6 +86,7 @@ final class GameScene: SKScene {
     private var score             = 0
     private var lives             = 3
     private var wave              = 1
+    private var nextLifeThreshold = 10000  // bonus life every 10k points
     private var waveCompleteGuard      = false
     private var timerFired             = false
     private var blackHoleSpawnedThisWave  = false
@@ -172,7 +200,117 @@ final class GameScene: SKScene {
         btnLabel.position = .zero
         btnBg.addChild(btnLabel)
 
+        // Help button
+        let helpBg = SKShapeNode(rectOf: CGSize(width: 100, height: 34), cornerRadius: 6)
+        helpBg.name        = "helpBtn"
+        helpBg.fillColor   = PlatformColor(red: 0.00, green: 0.50, blue: 0.60, alpha: 0.20)
+        helpBg.strokeColor = PlatformColor(red: 0.00, green: 0.80, blue: 0.96, alpha: 0.70)
+        helpBg.lineWidth   = 1.5
+        helpBg.glowWidth   = 5
+        helpBg.position    = CGPoint(x: size.width/2, y: size.height/2 - 128)
+        panel.addChild(helpBg)
+
+        let helpLabel = SKLabelNode(text: "HELP")
+        helpLabel.name                 = "helpBtn"
+        helpLabel.fontName             = "Courier-Bold"
+        helpLabel.fontSize             = 16
+        helpLabel.fontColor            = PlatformColor(red: 0.00, green: 0.96, blue: 1.00, alpha: 1)
+        helpLabel.verticalAlignmentMode = .center
+        helpLabel.position             = .zero
+        helpBg.addChild(helpLabel)
+
         addScrollingScores(to: panel)
+    }
+
+    private func showHelpScreen() {
+        phase = .help
+
+        let panel = SKNode()
+        panel.name      = "helpPanel"
+        panel.zPosition = 60
+        addChild(panel)
+
+        let cardW: CGFloat = 560
+        let cardH: CGFloat = 420
+        let cx = size.width / 2
+        let cy = size.height / 2
+
+        // Card background
+        let card = SKShapeNode(rectOf: CGSize(width: cardW, height: cardH), cornerRadius: 12)
+        card.fillColor   = PlatformColor(red: 0.04, green: 0.00, blue: 0.10, alpha: 0.97)
+        card.strokeColor = PlatformColor(red: 0.00, green: 0.96, blue: 1.00, alpha: 0.60)
+        card.lineWidth   = 2
+        card.glowWidth   = 10
+        card.position    = CGPoint(x: cx, y: cy)
+        panel.addChild(card)
+
+        func heading(_ text: String, y: CGFloat) {
+            let lbl = SKLabelNode(text: text)
+            lbl.fontName             = "Courier-Bold"
+            lbl.fontSize             = 13
+            lbl.fontColor            = PlatformColor(red: 0.00, green: 0.96, blue: 1.00, alpha: 1)
+            lbl.horizontalAlignmentMode = .left
+            lbl.position             = CGPoint(x: cx - cardW/2 + 36, y: cy + y)
+            panel.addChild(lbl)
+        }
+
+        func row(_ text: String, y: CGFloat) {
+            let lbl = SKLabelNode(text: text)
+            lbl.fontName             = "Courier"
+            lbl.fontSize             = 12
+            lbl.fontColor            = PlatformColor(white: 0.85, alpha: 1)
+            lbl.horizontalAlignmentMode = .left
+            lbl.position             = CGPoint(x: cx - cardW/2 + 36, y: cy + y)
+            panel.addChild(lbl)
+        }
+
+        // Title
+        let title = SKLabelNode(text: "HOW TO PLAY")
+        title.fontName               = "Courier-Bold"
+        title.fontSize               = 22
+        title.fontColor              = PlatformColor(red: 1.00, green: 0.18, blue: 0.47, alpha: 1)
+        title.horizontalAlignmentMode = .center
+        title.position               = CGPoint(x: cx, y: cy + 172)
+        panel.addChild(title)
+
+        heading("GOAL",     y:  140)
+        row("Guide all boids into the glowing safe zones before",  y: 118)
+        row("the timer runs out. Lose a life each time a boid",    y: 102)
+        row("is caught by a predator or swallowed by a black hole.",y:  86)
+
+        heading("CONTROLS", y: 58)
+        #if os(macOS)
+        row("Move mouse       Attract nearby boids",   y: 36)
+        row("Right-click      Repel nearby boids",     y: 20)
+        #else
+        row("Drag             Attract nearby boids",   y: 36)
+        row("Two-finger drag  Repel nearby boids",     y: 20)
+        #endif
+
+        heading("BOID TYPES", y: -8)
+        row("Small (skittish)   Fast, flee predators early, hard to herd", y: -30)
+        row("Normal             Balanced flocking behaviour",               y: -46)
+        row("Large (stubborn)   Slow, ignores the flock, wanders alone",    y: -62)
+
+        heading("HAZARDS", y: -90)
+        row("Predators      Hunt boids — ghost blue at wave start,",  y: -112)
+        row("               activate after a grace period.",          y: -128)
+        row("Black holes    Appear wave 5+, gravity pulls boids in.", y: -144)
+
+        heading("SCORING", y: -172)
+        row("+5 per boid saved    +2 per second remaining at wave end", y: -194)
+
+        // Dismiss hint
+        let dismiss = SKLabelNode(text: "CLICK ANYWHERE TO CLOSE")
+        dismiss.fontName               = "Courier"
+        dismiss.fontSize               = 11
+        dismiss.fontColor              = PlatformColor(white: 0.45, alpha: 1)
+        dismiss.horizontalAlignmentMode = .center
+        dismiss.position               = CGPoint(x: cx, y: cy - cardH/2 + 18)
+        panel.addChild(dismiss)
+
+        panel.alpha = 0
+        panel.run(.fadeIn(withDuration: 0.18))
     }
 
     private func addScrollingScores(to panel: SKNode) {
@@ -588,6 +726,24 @@ final class GameScene: SKScene {
         scoreLabel.text = "SCORE: \(score)"
         livesLabel.text = livesString()
         waveLabel.text  = "WAVE \(wave)"
+        checkExtraLife()
+    }
+
+    private func checkExtraLife() {
+        guard phase == .playing, score >= nextLifeThreshold, lives < 6 else { return }
+        lives += 1
+        nextLifeThreshold += 10000
+        AudioManager.shared.play("extra_player")
+        refreshHUD()
+
+        let lbl = addLabel("+1 LIFE", at: CGPoint(x: size.width / 2, y: size.height / 2 + 30),
+                           font: 32, color: PlatformColor(red: 0.22, green: 1.00, blue: 0.08, alpha: 1), z: 30)
+        lbl.run(.sequence([
+            .group([.scale(to: 1.3, duration: 0.2), .fadeAlpha(to: 1, duration: 0.2)]),
+            .wait(forDuration: 0.9),
+            .group([.scale(to: 0.8, duration: 0.3), .fadeOut(withDuration: 0.3)]),
+            .removeFromParent()
+        ]))
     }
 
     private func refreshBoidCount() {
@@ -857,7 +1013,10 @@ final class GameScene: SKScene {
                 // Only count down once fully faded in
                 if pred.alpha >= 0.99 {
                     pred.ghostOnScreenTime += dt
-                    if pred.ghostOnScreenTime >= 2.0 { pred.activate() }
+                    if pred.ghostOnScreenTime >= Config.PredatorAggression.forWave(wave).gracePeriod {
+                        pred.activate()
+                        AudioManager.shared.play("pred_danger")
+                    }
                 }
             } else {
                 // Steer toward screen center so the predator enters before activating
@@ -880,16 +1039,19 @@ final class GameScene: SKScene {
             }
         }
 
+        let ag = Config.PredatorAggression.forWave(wave)
+        let topSpeed = wavePredatorMaxSpeed() * ag.speedScale
+
         let targets = boids.filter { $0.state == .wandering || $0.state == .threatened }
         if let target = targets.min(by: {
             $0.position.distance(to: pred.position) < $1.position.distance(to: pred.position)
         }) {
-            let predicted = target.position + target.velocity * 0.4
+            let predicted = target.position + target.velocity * ag.predictTime
             let steer = (predicted - pred.position).normalized()
-            pred.velocity = (pred.velocity * 0.97 + steer * 0.35 + avoidForce).limited(to: wavePredatorMaxSpeed())
+            pred.velocity = (pred.velocity * ag.turnDamping + steer * ag.steerStrength + avoidForce).limited(to: topSpeed)
             pred.setHunting(pred.position.distance(to: target.position) < 80)
         } else {
-            pred.velocity = (pred.velocity * 0.97 + avoidForce).limited(to: wavePredatorMaxSpeed())
+            pred.velocity = (pred.velocity * ag.turnDamping + avoidForce).limited(to: topSpeed)
         }
         pred.faceDirection(pred.velocity)
         pred.position = pred.position + pred.velocity * dt
@@ -980,7 +1142,7 @@ final class GameScene: SKScene {
         waveCompleteGuard = true
         phase = .waveComplete
 
-        let timeBonus     = Int(max(0, waveTimeRemaining)) * 2
+        let timeBonus     = Int(max(0, waveTimeRemaining)) * 10
         let survivalBonus = survivors.count * 5
         let totalBonus    = timeBonus + survivalBonus
         score += totalBonus
@@ -1177,8 +1339,15 @@ final class GameScene: SKScene {
                  at: CGPoint(x: cx, y: cy + 10),
                  font: 22, color: PlatformColor(red: 1, green: 0.90, blue: 0, alpha: 1), z: 51)
 
-        // After a moment, slide into initials entry
-        run(.sequence([.wait(forDuration: 1.8), .run { [weak self] in self?.showInitialsEntry() }]))
+        // After a moment, go to initials entry only if score qualifies for the leaderboard
+        run(.sequence([.wait(forDuration: 1.8), .run { [weak self] in
+            guard let self else { return }
+            if ScoreManager.shared.qualifies(score: self.score) {
+                self.showInitialsEntry()
+            } else {
+                self.showScoreboard()
+            }
+        }]))
     }
 
     private func showInitialsEntry() {
@@ -1328,7 +1497,7 @@ final class GameScene: SKScene {
     private func restart() {
         removeAllChildren(); removeAllActions()
         boids.removeAll(); predators.removeAll(); safeZones.removeAll(); blackHoles.removeAll()
-        score = 0; lives = 3; wave = 1; lastTime = nil
+        score = 0; lives = 3; wave = 1; lastTime = nil; nextLifeThreshold = 10000
         waveCompleteGuard = false; timerFired = false
         blackHoleSpawnedThisWave = false; blackHoleRolledThisWave = false
         backgroundColor = PlatformColor(red: 0.04, green: 0.00, blue: 0.07, alpha: 1)
@@ -1375,7 +1544,15 @@ final class GameScene: SKScene {
 
     override func mouseDown(with event: NSEvent) {
         switch phase {
-        case .title:      beginGame(); return
+        case .title:
+            let loc = event.location(in: self)
+            if nodes(at: loc).contains(where: { $0.name == "helpBtn" }) {
+                showHelpScreen(); return
+            }
+            beginGame(); return
+        case .help:
+            childNode(withName: "helpPanel")?.run(.sequence([.fadeOut(withDuration: 0.15), .removeFromParent()]))
+            phase = .title; return
         case .scoreboard: restart();   return
         default: break
         }
@@ -1426,8 +1603,15 @@ final class GameScene: SKScene {
         guard let touch = touches.first else { return }
         let loc = touch.location(in: self)
         switch phase {
-        case .title:      beginGame(); return
-        case .scoreboard: restart();   return
+        case .title:
+            if nodes(at: loc).contains(where: { $0.name == "helpBtn" }) {
+                showHelpScreen(); return
+            }
+            beginGame(); return
+        case .help:
+            childNode(withName: "helpPanel")?.run(.sequence([.fadeOut(withDuration: 0.15), .removeFromParent()]))
+            phase = .title; return
+        case .scoreboard: restart(); return
         default: break
         }
         input.position = loc

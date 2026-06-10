@@ -15,6 +15,10 @@ final class ScoreManager {
 
     private init() { load() }
 
+    func qualifies(score: Int) -> Bool {
+        scores.count < 10 || score > (scores.last?.score ?? 0)
+    }
+
     func add(initials: String, score: Int, wave: Int) {
         let entry = ScoreEntry(initials: initials.uppercased(), score: score, wave: wave, date: Date())
         scores.append(entry)
