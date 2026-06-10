@@ -104,6 +104,7 @@ final class GameScene: SKScene {
     private var boidCountLabel: SKLabelNode!
 
     private var lastTime: TimeInterval?
+    private var lastKnownSize: CGSize = .zero
 
     // MARK: - Lifecycle
 
@@ -112,6 +113,22 @@ final class GameScene: SKScene {
         drawGrid()
         spawnNebulas()
         showTitleScreen()
+        lastKnownSize = size
+    }
+
+    private func adaptToCurrentSize() {
+        enumerateChildNodes(withName: "grid") { node, _ in node.removeFromParent() }
+        drawGrid()
+        enumerateChildNodes(withName: "nebula") { node, _ in node.removeFromParent() }
+        spawnNebulas()
+        if scoreLabel != nil {
+            scoreLabel.position     = CGPoint(x: 14,              y: size.height - 28)
+            livesLabel.position     = CGPoint(x: size.width - 14, y: size.height - 28)
+            waveLabel.position      = CGPoint(x: size.width / 2,  y: size.height - 28)
+            timerLabel.position     = CGPoint(x: size.width / 2,  y: size.height - 48)
+            boidCountLabel.position = CGPoint(x: 14,              y: size.height - 48)
+        }
+        if phase == .title { buildTitleUI() }
     }
 
     private func formatDate(_ date: Date?) -> String {
@@ -125,10 +142,13 @@ final class GameScene: SKScene {
         phase = .title
         AudioManager.shared.stopBackground()
         AudioManager.shared.startIntro()
-
-        // Ambient boids + roaming predators for the attract screen
         spawnAmbientBoids()
         spawnPredators(3)
+        buildTitleUI()
+    }
+
+    private func buildTitleUI() {
+        childNode(withName: "titlePanel")?.removeFromParent()
 
         let panel = SKNode()
         panel.name = "titlePanel"
@@ -155,7 +175,6 @@ final class GameScene: SKScene {
             let s = imgW / tex.size().width
             titleImg.size = CGSize(width: imgW, height: tex.size().height * s)
         } else {
-            // Fallback text if image missing
             let lbl = SKLabelNode(text: "PARTICLE")
             lbl.fontName = "Courier-Bold"; lbl.fontSize = 72
             lbl.fontColor = PlatformColor(red: 1.00, green: 0.18, blue: 0.47, alpha: 1)
@@ -201,24 +220,44 @@ final class GameScene: SKScene {
         btnLabel.position = .zero
         btnBg.addChild(btnLabel)
 
-        // Help button
-        let helpBg = SKShapeNode(rectOf: CGSize(width: 100, height: 34), cornerRadius: 6)
-        helpBg.name        = "helpBtn"
-        helpBg.fillColor   = PlatformColor(red: 0.00, green: 0.50, blue: 0.60, alpha: 0.20)
-        helpBg.strokeColor = PlatformColor(red: 0.00, green: 0.80, blue: 0.96, alpha: 0.70)
-        helpBg.lineWidth   = 1.5
-        helpBg.glowWidth   = 5
-        helpBg.position    = CGPoint(x: size.width/2, y: size.height/2 - 128)
-        panel.addChild(helpBg)
+        // Help button — bottom-left corner, same style as fullscreen button
+        let helpBacking = SKShapeNode(rectOf: CGSize(width: 100, height: 28), cornerRadius: 4)
+        helpBacking.name        = "helpBtn"
+        helpBacking.fillColor   = PlatformColor(white: 1, alpha: 0.001)
+        helpBacking.strokeColor = .clear
+        helpBacking.position    = CGPoint(x: 62, y: 20)
+        helpBacking.zPosition   = 41
+        panel.addChild(helpBacking)
 
-        let helpLabel = SKLabelNode(text: "HELP")
-        helpLabel.name                 = "helpBtn"
-        helpLabel.fontName             = "Courier-Bold"
-        helpLabel.fontSize             = 16
-        helpLabel.fontColor            = PlatformColor(red: 0.00, green: 0.96, blue: 1.00, alpha: 1)
-        helpLabel.verticalAlignmentMode = .center
-        helpLabel.position             = .zero
-        helpBg.addChild(helpLabel)
+        let helpBtn = SKLabelNode(text: "?  HELP")
+        helpBtn.name                   = "helpBtn"
+        helpBtn.fontName               = "Courier"
+        helpBtn.fontSize               = 12
+        helpBtn.fontColor              = PlatformColor(white: 0.50, alpha: 1)
+        helpBtn.horizontalAlignmentMode = .center
+        helpBtn.verticalAlignmentMode  = .center
+        helpBtn.position               = .zero
+        helpBacking.addChild(helpBtn)
+
+        #if os(macOS)
+        let fsBacking = SKShapeNode(rectOf: CGSize(width: 140, height: 28), cornerRadius: 4)
+        fsBacking.name        = "fullscreenBtn"
+        fsBacking.fillColor   = PlatformColor(white: 1, alpha: 0.001)
+        fsBacking.strokeColor = .clear
+        fsBacking.position    = CGPoint(x: size.width - 86, y: 20)
+        fsBacking.zPosition   = 41
+        panel.addChild(fsBacking)
+
+        let fsBtn = SKLabelNode(text: "⛶  FULLSCREEN  (F)")
+        fsBtn.name                   = "fullscreenBtn"
+        fsBtn.fontName               = "Courier"
+        fsBtn.fontSize               = 12
+        fsBtn.fontColor              = PlatformColor(white: 0.50, alpha: 1)
+        fsBtn.horizontalAlignmentMode = .center
+        fsBtn.verticalAlignmentMode  = .center
+        fsBtn.position               = .zero
+        fsBacking.addChild(fsBtn)
+        #endif
 
         addScrollingScores(to: panel)
     }
@@ -478,6 +517,7 @@ final class GameScene: SKScene {
         var y: CGFloat = 0
         while y <= size.height { path.move(to: CGPoint(x: 0, y: y)); path.addLine(to: CGPoint(x: size.width, y: y)); y += step }
         let grid = SKShapeNode(path: path)
+        grid.name = "grid"
         grid.strokeColor = color
         grid.lineWidth = 0.8
         grid.zPosition = -10
@@ -832,6 +872,12 @@ final class GameScene: SKScene {
     // MARK: - Update
 
     override func update(_ currentTime: TimeInterval) {
+        // Detect view resize (fullscreen toggle) — more reliable than didChangeSize
+        if size.width > 0 && size != lastKnownSize {
+            lastKnownSize = size
+            adaptToCurrentSize()
+        }
+
         // Title attract screen — full boid/predator simulation, no HUD or scoring
         if phase == .title {
             let dt: CGFloat = lastTime.map { CGFloat(min(currentTime - $0, 1/30.0)) } ?? (1/60.0)
@@ -1078,9 +1124,10 @@ final class GameScene: SKScene {
                 // Only count down once fully faded in
                 if pred.alpha >= 0.99 {
                     pred.ghostOnScreenTime += dt
-                    if pred.ghostOnScreenTime >= Config.PredatorAggression.forWave(wave).gracePeriod {
+                    let ag = phase == .title ? Config.PredatorAggression.level5 : Config.PredatorAggression.forWave(wave)
+                    if pred.ghostOnScreenTime >= ag.gracePeriod {
                         pred.activate()
-                        AudioManager.shared.play("pred_danger")
+                        if phase != .title { AudioManager.shared.play("pred_danger") }
                     }
                 }
             } else {
@@ -1104,7 +1151,7 @@ final class GameScene: SKScene {
             }
         }
 
-        let ag = Config.PredatorAggression.forWave(wave)
+        let ag = phase == .title ? Config.PredatorAggression.level5 : Config.PredatorAggression.forWave(wave)
         let topSpeed = wavePredatorMaxSpeed() * ag.speedScale
 
         let targets = boids.filter { $0.state == .wandering || $0.state == .threatened }
@@ -1281,7 +1328,7 @@ final class GameScene: SKScene {
 
     private func devour(_ boid: BoidNode) {
         boid.state = .dying
-        AudioManager.shared.play("boid_dead")
+        if phase != .title { AudioManager.shared.play("boid_dead") }
 
         let pos   = boid.position
         let color = boid.neonColor
@@ -1615,6 +1662,9 @@ final class GameScene: SKScene {
             if nodes(at: loc).contains(where: { $0.name == "helpBtn" }) {
                 showHelpScreen(); return
             }
+            if nodes(at: loc).contains(where: { $0.name == "fullscreenBtn" }) {
+                view?.window?.toggleFullScreen(nil); return
+            }
             beginGame(); return
         case .help:
             childNode(withName: "helpPanel")?.run(.sequence([.fadeOut(withDuration: 0.15), .removeFromParent()]))
@@ -1637,6 +1687,20 @@ final class GameScene: SKScene {
     override func mouseDragged(with event: NSEvent)  { input.position = event.location(in: self) }
 
     override func keyDown(with event: NSEvent) {
+        if event.keyCode == 53 { // Esc — quit prompt
+            let alert = NSAlert()
+            alert.messageText = "Quit PARTICLE?"
+            alert.alertStyle = .warning
+            alert.addButton(withTitle: "Quit")
+            alert.addButton(withTitle: "Cancel")
+            if alert.runModal() == .alertFirstButtonReturn {
+                NSApp.terminate(nil)
+            }
+            return
+        }
+        if event.keyCode == 3, phase == .title { // F key — only from title screen
+            view?.window?.toggleFullScreen(nil); return
+        }
         if phase == .enteringInitials {
             let keyCode = event.keyCode
             if keyCode == 51 {
