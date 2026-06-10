@@ -276,6 +276,15 @@ final class GameScene: SKScene {
         fsBacking.addChild(fsBtn)
         #endif
 
+        // Version — upper-right corner
+        let verLbl = SKLabelNode(text: "v\(gameVersion)")
+        verLbl.fontName                = "Courier"
+        verLbl.fontSize                = 11
+        verLbl.fontColor               = PlatformColor(white: 0.40, alpha: 1)
+        verLbl.horizontalAlignmentMode = .right
+        verLbl.position                = CGPoint(x: size.width - 10, y: size.height - 20)
+        panel.addChild(verLbl)
+
         addScrollingScores(to: panel)
     }
 
@@ -442,16 +451,6 @@ final class GameScene: SKScene {
             ]))
         ]))
 
-        // Top and bottom fade overlays (painted over the crop node, outside it)
-        let fadeH: CGFloat = 28
-        for (sign, offsetY): (CGFloat, CGFloat) in [(1, bandH / 2 - fadeH / 2), (-1, -bandH / 2 + fadeH / 2)] {
-            let fade = SKShapeNode(rectOf: CGSize(width: bandW, height: fadeH))
-            fade.fillColor  = PlatformColor(red: 0.04, green: 0, blue: 0.07,
-                                      alpha: sign > 0 ? 0.92 : 0.88)
-            fade.strokeColor = .clear
-            fade.position   = CGPoint(x: cx, y: bandCY + offsetY)
-            panel.addChild(fade)
-        }
     }
 
     private func spawnAmbientBoids(count: Int = 35) {

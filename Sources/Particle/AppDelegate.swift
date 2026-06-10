@@ -12,7 +12,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             backing: .buffered,
             defer: false
         )
-        window.title = "PARTICLE"
+        window.title = "PARTICLE  v\(gameVersion)"
         window.backgroundColor = .black
         window.center()
         window.acceptsMouseMovedEvents = true

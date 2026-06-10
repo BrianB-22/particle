@@ -14,7 +14,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             defer: false
         )
         window.collectionBehavior = [.fullScreenPrimary]
-        window.title = "PARTICLE"
+        window.title = "PARTICLE  v\(gameVersion)"
         window.backgroundColor = .black
         window.center()
         window.acceptsMouseMovedEvents = true
